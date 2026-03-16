@@ -1,13 +1,103 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// server/prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// 1. Енумератори (Фіксовані списки значень)
+enum Role {
+  CLIENT
+  SPECIALIST
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SessionStatus {
+  CREATED
+  PENDING_DONATION
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+// 2. Моделі таблиць
+
+// Головна таблиця користувачів (спільна для всіх)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Захешований пароль
+  firstName String?
+  lastName  String?
+  role      Role     @default(CLIENT)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Зв'язки
+  specialistProfile SpecialistProfile? // Буде тільки у спеціалістів
+  clientSessions    Session[]          @relation("ClientSessions")
+  diaryEntries      DiaryEntry[]       // Тільки для клієнтів
+}
+
+// Профіль спеціаліста (додаткова інформація)
+model SpecialistProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  bio                String?
+  specializations    String[]           // Масив тегів (наприклад: "КПТ", "Тривожність")
+  hourlyRate         Int?               // Можна використовувати для оцінки розміру бажаного донату
+  verificationStatus VerificationStatus @default(PENDING)
+  documentsUrl       String[]           // Посилання на скани дипломів
+  
+  // Зв'язки
+  sessions           Session[]          @relation("SpecialistSessions")
+}
+
+// Життєвий цикл сесії (бронювання та донати)
+model Session {
+  id              String        @id @default(uuid())
+  clientId        String
+  client          User          @relation("ClientSessions", fields: [clientId], references: [id])
+  
+  specialistId    String
+  specialist      SpecialistProfile @relation("SpecialistSessions", fields: [specialistId], references: [id])
+  
+  startTime       DateTime
+  endTime         DateTime
+  status          SessionStatus @default(CREATED)
+  
+  donationUrl     String?       // Посилання на банку або квитанцію
+  specialistNotes String?       // Приватні нотатки психолога (зашифровані)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Комплексний трекер (Щоденник клієнта)
+model DiaryEntry {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  moodScore       Int      // Оцінка настрою від 1 до 10
+  moodTags        String[] // Наприклад: "Сім'я", "Робота"
+  textContent     String?  // Текст щоденника (зашифрований E2EE)
+  
+  // Трекінг фізичного стану
+  sleepHours      Float?
+  workoutDone     Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
 }
