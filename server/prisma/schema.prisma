@@ -8,7 +8,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// 1. Енумератори (Фіксовані списки значень)
+// 1. Енумератори
 enum Role {
   CLIENT
   SPECIALIST
@@ -31,11 +31,10 @@ enum SessionStatus {
 
 // 2. Моделі таблиць
 
-// Головна таблиця користувачів (спільна для всіх)
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Унікальний ID користувача з Clerk
   email     String   @unique
-  password  String   // Захешований пароль
   firstName String?
   lastName  String?
   role      Role     @default(CLIENT)
@@ -44,60 +43,56 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Зв'язки
-  specialistProfile SpecialistProfile? // Буде тільки у спеціалістів
-  clientSessions    Session[]          @relation("ClientSessions")
-  diaryEntries      DiaryEntry[]       // Тільки для клієнтів
+  specialistProfile SpecialistProfile?
+  clientSessions    Session[]           @relation("ClientSessions")
+  diaryEntries      DiaryEntry[]
 }
 
-// Профіль спеціаліста (додаткова інформація)
 model SpecialistProfile {
-  id                 String             @id @default(uuid())
+  id                 String             @id @default(cuid())
   userId             String             @unique
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   bio                String?
-  specializations    String[]           // Масив тегів (наприклад: "КПТ", "Тривожність")
-  hourlyRate         Int?               // Можна використовувати для оцінки розміру бажаного донату
+  specializations    String[]           // Теги: "КПТ", "Гештальт"
+  hourlyRate         Int?               // Рекомендований донат
   verificationStatus VerificationStatus @default(PENDING)
-  documentsUrl       String[]           // Посилання на скани дипломів
+  documentsUrl       String[]           // Посилання на дипломи/сертифікати
   
-  // Зв'язки
   sessions           Session[]          @relation("SpecialistSessions")
 }
 
-// Життєвий цикл сесії (бронювання та донати)
 model Session {
-  id              String        @id @default(uuid())
+  id              String            @id @default(cuid())
   clientId        String
-  client          User          @relation("ClientSessions", fields: [clientId], references: [id])
+  client          User              @relation("ClientSessions", fields: [clientId], references: [id])
   
   specialistId    String
   specialist      SpecialistProfile @relation("SpecialistSessions", fields: [specialistId], references: [id])
   
   startTime       DateTime
   endTime         DateTime
-  status          SessionStatus @default(CREATED)
+  status          SessionStatus     @default(CREATED)
   
-  donationUrl     String?       // Посилання на банку або квитанцію
-  specialistNotes String?       // Приватні нотатки психолога (зашифровані)
+  donationUrl     String?           // Посилання на банку Monobank
+  specialistNotes String?           // Приватні нотатки (E2EE шифрування)
   
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
-// Комплексний трекер (Щоденник клієнта)
 model DiaryEntry {
-  id              String   @id @default(uuid())
+  id              String   @id @default(cuid())
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  moodScore       Int      // Оцінка настрою від 1 до 10
-  moodTags        String[] // Наприклад: "Сім'я", "Робота"
-  textContent     String?  // Текст щоденника (зашифрований E2EE)
+  moodScore       Int      // 1-10
+  moodTags        String[] // ["робота", "сім'я", "тривога"]
+  textContent     String?  @db.Text // Текст щоденника
   
-  // Трекінг фізичного стану
   sleepHours      Float?
   workoutDone     Boolean  @default(false)
   
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
