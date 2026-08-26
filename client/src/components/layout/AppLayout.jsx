@@ -1,0 +1,43 @@
+import { Outlet, NavLink } from "react-router-dom";
+import Header from "./Header";
+
+const navItems = [
+  { to: "/", label: "Головна" },
+  { to: "/dashboard", label: "Кабінет" },
+  { to: "/specialists", label: "Спеціалісти" },
+  { to: "/diary", label: "Щоденник" },
+  { to: "/chat", label: "Чат" },
+];
+
+const AppLayout = () => {
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-100">
+      <Header />
+
+      <nav className="pt-20 pb-4 px-4 flex gap-2 justify-center flex-wrap">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === "/"}
+            className={({ isActive }) =>
+              `px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-200"
+              }`
+            }
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <main className="flex-1 px-4 pb-8">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+export default AppLayout;
