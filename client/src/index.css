@@ -1,4 +1,24 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Manrope", system-ui, "Segoe UI", sans-serif;
+
+  --color-canvas: #f8f7fc;
+  --color-surface: #ffffff;
+  --color-border: #e8e5f2;
+  --color-ink: #241f33;
+  --color-muted: #6b6478;
+
+  --color-primary: #6c5dd3;
+  --color-primary-dark: #5a4cc0;
+  --color-primary-soft: #efebfb;
+
+  --color-accent: #e2a24c;
+  --color-accent-soft: #fceeda;
+
+  --color-danger: #e2574c;
+}
 
 *,
 *::before,
@@ -14,7 +34,9 @@ body,
 
 body {
   margin: 0;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }

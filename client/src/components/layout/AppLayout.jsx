@@ -11,7 +11,7 @@ const navItems = [
 
 const AppLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-canvas">
       <Header />
 
       <nav className="pt-20 pb-4 px-4 flex gap-2 justify-center flex-wrap">
@@ -21,10 +21,10 @@ const AppLayout = () => {
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              `px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              `px-4 py-2 rounded-xl text-sm font-semibold transition ${
                 isActive
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-surface text-muted border border-border hover:bg-primary-soft hover:text-primary"
               }`
             }
           >
