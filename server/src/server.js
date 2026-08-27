@@ -9,6 +9,13 @@ console.log("------------------------");
 const { clerkMiddleware } = require("@clerk/express");
 
 const authRoutes = require("./routes/authRoutes");
+const fundraiserRoutes = require("./routes/fundraiserRoutes");
+const availabilityRoutes = require("./routes/availabilityRoutes");
+const sessionRoutes = require("./routes/sessionRoutes");
+const donationRoutes = require("./routes/donationRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -19,6 +26,13 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/fundraisers", fundraiserRoutes);
+app.use("/api/availability", availabilityRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/", (req, res) => {
   res.send("Mental Health API with Clerk Express is running...");
