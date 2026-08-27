@@ -29,6 +29,25 @@ enum SessionStatus {
   CANCELLED
 }
 
+// НОВЕ: статус підтвердження донату
+enum DonationStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+// НОВЕ: типи сповіщень
+enum NotificationType {
+  SESSION_BOOKED
+  DONATION_SUBMITTED
+  DONATION_CONFIRMED
+  DONATION_REJECTED
+  SESSION_REMINDER
+  SESSION_CANCELLED
+  NEW_MESSAGE
+  SPECIALIST_APPROVED
+}
+
 // 2. Моделі таблиць
 
 model User {
@@ -38,7 +57,7 @@ model User {
   firstName String?
   lastName  String?
   role      Role     @default(CLIENT)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -46,53 +65,192 @@ model User {
   specialistProfile SpecialistProfile?
   clientSessions    Session[]           @relation("ClientSessions")
   diaryEntries      DiaryEntry[]
+
+  // НОВЕ
+  sentMessages      Message[]
+  notifications     Notification[]
+  clientReviews     Review[]
+  onboardingAnswer  OnboardingAnswer?
 }
 
 model SpecialistProfile {
   id                 String             @id @default(cuid())
   userId             String             @unique
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   bio                String?
   specializations    String[]           // Теги: "КПТ", "Гештальт"
   hourlyRate         Int?               // Рекомендований донат
   verificationStatus VerificationStatus @default(PENDING)
   documentsUrl       String[]           // Посилання на дипломи/сертифікати
-  
+
   sessions           Session[]          @relation("SpecialistSessions")
+
+  // НОВЕ
+  availabilitySlots  AvailabilitySlot[]
+  reviews            Review[]
 }
 
 model Session {
   id              String            @id @default(cuid())
   clientId        String
   client          User              @relation("ClientSessions", fields: [clientId], references: [id])
-  
+
   specialistId    String
   specialist      SpecialistProfile @relation("SpecialistSessions", fields: [specialistId], references: [id])
-  
+
   startTime       DateTime
   endTime         DateTime
   status          SessionStatus     @default(CREATED)
-  
-  donationUrl     String?           // Посилання на банку Monobank
+
   specialistNotes String?           // Приватні нотатки (E2EE шифрування)
-  
+
+  // НОВЕ: замість вільного donationUrl — звʼязок з конкретним фондом
+  fundraiserId    String?
+  fundraiser      Fundraiser?       @relation(fields: [fundraiserId], references: [id])
+
+  // НОВЕ: слот, який заброньований під цю сесію
+  slotId          String?           @unique
+  slot            AvailabilitySlot? @relation(fields: [slotId], references: [id])
+
+  // НОВЕ
+  donations       Donation[]
+  messages        Message[]
+  review          Review?
+
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 }
 
 model DiaryEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  moodScore   Int      // 1-10
+  moodTags    String[] // ["робота", "сім'я", "тривога"]
+  textContent String?  @db.Text // Текст щоденника
+
+  sleepHours  Float?
+  workoutDone Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// НОВЕ: фонд/збір, куди можна задонатити замість оплати сесії
+model Fundraiser {
+  id          String     @id @default(cuid())
+  name        String
+  description String?    @db.Text
+  bankJarUrl  String     // Посилання на банку Monobank/іншого сервісу
+  category    String?    // напр. "оборона", "гуманітарна допомога"
+  logoUrl     String?
+  isVerified  Boolean    @default(false)
+  isActive    Boolean    @default(true)
+
+  sessions    Session[]
+  donations   Donation[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// НОВЕ: факт донату й підтвердження до нього
+model Donation {
+  id            String         @id @default(cuid())
+  sessionId     String
+  session       Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  fundraiserId  String
+  fundraiser    Fundraiser     @relation(fields: [fundraiserId], references: [id])
+
+  amount        Float?         // Сума, заявлена клієнтом (не обов'язково)
+  proofUrl      String         // Скріншот-підтвердження донату
+  status        DonationStatus @default(PENDING)
+
+  // Навмисно НЕ зовнішній ключ (щоб не ускладнювати каскади) —
+  // просто userId того, хто підтвердив (спеціаліст або адмін)
+  confirmedById String?
+  confirmedAt   DateTime?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// НОВЕ: часові слоти, які відкриває спеціаліст для запису
+model AvailabilitySlot {
+  id           String            @id @default(cuid())
+  specialistId String
+  specialist   SpecialistProfile @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  startTime    DateTime
+  endTime      DateTime
+  isBooked     Boolean           @default(false)
+
+  session      Session?
+
+  createdAt    DateTime          @default(now())
+}
+
+// НОВЕ: чат клієнта і спеціаліста в межах сесії
+model Message {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+// НОВЕ: сповіщення користувачу
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String?
+  link      String?          // Куди веде сповіщення, напр. "/dashboard"
+  isRead    Boolean          @default(false)
+
+  createdAt DateTime         @default(now())
+}
+
+// НОВЕ: відгук клієнта на спеціаліста після завершеної сесії
+model Review {
+  id           String            @id @default(cuid())
+  sessionId    String            @unique
+  session      Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  clientId     String
+  client       User              @relation(fields: [clientId], references: [id])
+
+  specialistId String
+  specialist   SpecialistProfile @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  rating       Int               // 1-5
+  comment      String?           @db.Text
+
+  createdAt    DateTime          @default(now())
+}
+
+// НОВЕ: відповіді клієнта на онбординг-опитування (для smart matching)
+model OnboardingAnswer {
   id              String   @id @default(cuid())
-  userId          String
+  userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  moodScore       Int      // 1-10
-  moodTags        String[] // ["робота", "сім'я", "тривога"]
-  textContent     String?  @db.Text // Текст щоденника
-  
-  sleepHours      Float?
-  workoutDone     Boolean  @default(false)
-  
+
+  concerns        String[] // напр. ["тривожність", "стосунки", "вигорання"]
+  preferredGender String?  // "чоловіча" / "жіноча" / "не має значення"
+  urgencyLevel    String?  // "терміново" / "можу почекати"
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
