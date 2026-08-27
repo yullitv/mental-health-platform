@@ -5,8 +5,8 @@ const WelcomeMessage = () => {
 
   return (
     <SignedIn>
-      <div className="mt-8 p-4 bg-white rounded-xl shadow-sm border border-green-100 animate-fade-in">
-        <p className="text-green-700 font-medium">
+      <div className="mt-8 p-5 bg-surface rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] border border-border">
+        <p className="text-ink font-semibold">
           Вітаємо, {user?.firstName || "користувачу"}! Ти в системі. ✨
         </p>
       </div>
