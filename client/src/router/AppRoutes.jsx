@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
 import ProtectedRoute from "../components/layout/ProtectedRoute";
+import RoleRoute from "../components/layout/RoleRoute";
 import HomePage from "../pages/Home/HomePage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import SpecialistsPage from "../pages/Specialists/SpecialistsPage";
@@ -20,9 +21,10 @@ const AppRoutes = () => {
           <Route path="/specialists" element={<SpecialistsPage />} />
           <Route path="/diary" element={<DiaryPage />} />
           <Route path="/chat" element={<ChatPage />} />
-          {/* TODO: коли зробимо синхронізацію ролі з бекенду на фронтенд,
-              /admin винесемо в окремий Route з перевіркою role === "ADMIN" */}
-          <Route path="/admin" element={<AdminPage />} />
+
+          <Route element={<RoleRoute allow={["ADMIN"]} />}>
+            <Route path="/admin" element={<AdminPage />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

@@ -1,7 +1,8 @@
 import { Outlet, NavLink } from "react-router-dom";
 import Header from "./Header";
+import { useCurrentUser } from "../../context/CurrentUserContext";
 
-const navItems = [
+const baseNavItems = [
   { to: "/", label: "Головна" },
   { to: "/dashboard", label: "Кабінет" },
   { to: "/specialists", label: "Спеціалісти" },
@@ -10,6 +11,12 @@ const navItems = [
 ];
 
 const AppLayout = () => {
+  const { dbUser } = useCurrentUser();
+  const navItems =
+    dbUser?.role === "ADMIN"
+      ? [...baseNavItems, { to: "/admin", label: "Адмін-панель" }]
+      : baseNavItems;
+
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
       <Header />
