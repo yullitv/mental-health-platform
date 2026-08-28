@@ -12,10 +12,12 @@ const baseNavItems = [
 
 const AppLayout = () => {
   const { dbUser } = useCurrentUser();
-  const navItems =
-    dbUser?.role === "ADMIN"
-      ? [...baseNavItems, { to: "/admin", label: "Адмін-панель" }]
-      : baseNavItems;
+  let navItems = baseNavItems;
+  if (dbUser?.role === "ADMIN") {
+    navItems = [...baseNavItems, { to: "/admin", label: "Адмін-панель" }];
+  } else if (dbUser?.role === "CLIENT") {
+    navItems = [...baseNavItems, { to: "/onboarding", label: "Анкета" }];
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
