@@ -5,9 +5,11 @@ import RoleRoute from "../components/layout/RoleRoute";
 import HomePage from "../pages/Home/HomePage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import SpecialistsPage from "../pages/Specialists/SpecialistsPage";
+import SpecialistDetailPage from "../pages/Specialists/SpecialistDetailPage";
 import DiaryPage from "../pages/Diary/DiaryPage";
 import ChatPage from "../pages/Chat/ChatPage";
 import AdminPage from "../pages/Admin/AdminPage";
+import DonationPage from "../pages/Donation/DonationPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -19,11 +21,16 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/specialists" element={<SpecialistsPage />} />
+          <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
           <Route path="/diary" element={<DiaryPage />} />
           <Route path="/chat" element={<ChatPage />} />
 
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allow={["CLIENT"]} />}>
+            <Route path="/sessions/:id/donate" element={<DonationPage />} />
           </Route>
         </Route>
 
