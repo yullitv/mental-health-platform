@@ -32,6 +32,7 @@ export const CurrentUserProvider = ({ children }) => {
             email: user.primaryEmailAddress?.emailAddress,
             firstName: user.firstName,
             lastName: user.lastName,
+            role: user.unsafeMetadata?.intendedRole,
           }),
         });
 
