@@ -17,6 +17,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const onboardingRoutes = require("./routes/onboardingRoutes");
+const specialistRoutes = require("./routes/specialistRoutes");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/specialists", specialistRoutes);
 
 
 app.get("/", (req, res) => {
