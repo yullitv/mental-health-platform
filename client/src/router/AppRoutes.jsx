@@ -8,6 +8,7 @@ import SpecialistsPage from "../pages/Specialists/SpecialistsPage";
 import DiaryPage from "../pages/Diary/DiaryPage";
 import ChatPage from "../pages/Chat/ChatPage";
 import AdminPage from "../pages/Admin/AdminPage";
+import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -24,6 +25,10 @@ const AppRoutes = () => {
 
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allow={["CLIENT"]} />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
           </Route>
         </Route>
 
