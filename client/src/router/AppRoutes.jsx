@@ -10,6 +10,7 @@ import DiaryPage from "../pages/Diary/DiaryPage";
 import ChatPage from "../pages/Chat/ChatPage";
 import AdminPage from "../pages/Admin/AdminPage";
 import DonationPage from "../pages/Donation/DonationPage";
+import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -31,6 +32,7 @@ const AppRoutes = () => {
 
           <Route element={<RoleRoute allow={["CLIENT"]} />}>
             <Route path="/sessions/:id/donate" element={<DonationPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
           </Route>
         </Route>
 
