@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
-import { API_BASE_URL } from "../../api/config";
+import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 
 const STATUS_LABELS = {
   CREATED: "Заброньовано",
@@ -132,7 +132,11 @@ const DashboardPage = () => {
                     {donation.fundraiser?.name}
                   </p>
                   <a
-                    href={donation.proofUrl}
+                    href={
+                      donation.proofUrl?.startsWith("http")
+                        ? donation.proofUrl
+                        : `${SERVER_ORIGIN}${donation.proofUrl}`
+                    }
                     target="_blank"
                     rel="noreferrer"
                     className="text-sm font-semibold text-primary hover:underline"

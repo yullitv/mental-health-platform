@@ -11,7 +11,7 @@ const DonationPage = () => {
   const [fundraisers, setFundraisers] = useState([]);
   const [fundraiserId, setFundraiserId] = useState("");
   const [amount, setAmount] = useState("");
-  const [proofUrl, setProofUrl] = useState("");
+  const [proofFile, setProofFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,26 +34,26 @@ const DonationPage = () => {
     e.preventDefault();
     setError("");
 
-    if (!fundraiserId || !proofUrl.trim()) {
-      setError("Обери фонд і встав посилання на підтвердження донату");
+    if (!fundraiserId || !proofFile) {
+      setError("Обери фонд і додай файл підтвердження донату");
       return;
     }
 
     setIsSubmitting(true);
     try {
       const token = await getToken();
+      const formData = new FormData();
+      formData.append("sessionId", id);
+      formData.append("fundraiserId", fundraiserId);
+      if (amount) formData.append("amount", amount);
+      formData.append("proof", proofFile);
+
       const response = await fetch(`${API_BASE_URL}/donations`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          sessionId: id,
-          fundraiserId,
-          amount: amount ? Number(amount) : undefined,
-          proofUrl: proofUrl.trim(),
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -75,7 +75,7 @@ const DonationPage = () => {
       <h2 className="text-2xl font-extrabold text-ink mb-2">Підтвердження донату</h2>
       <p className="text-muted mb-6">
         Сесія оплачується не спеціалісту напряму, а через донат у благодійний фонд.
-        Зроби переказ на банку фонду й встав посилання на скріншот-підтвердження.
+        Зроби переказ на банку фонду й завантaж скріншот-підтвердження.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,14 +107,13 @@ const DonationPage = () => {
 
         <div>
           <label className="block font-semibold text-ink mb-1">
-            Посилання на скріншот підтвердження
+            Скріншот підтвердження (JPG, PNG, WEBP або PDF, до 5 МБ)
           </label>
           <input
-            type="url"
-            value={proofUrl}
-            onChange={(e) => setProofUrl(e.target.value)}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            onChange={(e) => setProofFile(e.target.files?.[0] || null)}
             className="w-full border border-border rounded-xl px-3 py-2 bg-canvas"
-            placeholder="https://..."
             required
           />
         </div>

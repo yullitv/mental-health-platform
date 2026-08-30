@@ -4,13 +4,16 @@ const { createNotification } = require("../utils/notificationHelper");
 // POST /api/donations — клієнт надсилає підтвердження донату для своєї сесії
 exports.createDonation = async (req, res) => {
   try {
-    const { sessionId, fundraiserId, amount, proofUrl } = req.body;
+    const { sessionId, fundraiserId, amount } = req.body;
 
-    if (!sessionId || !fundraiserId || !proofUrl) {
+    if (!sessionId || !fundraiserId || !req.file) {
       return res.status(400).json({
-        message: "Поля 'sessionId', 'fundraiserId' та 'proofUrl' обов'язкові",
+        message:
+          "Поля 'sessionId', 'fundraiserId' та файл підтвердження обов'язкові",
       });
     }
+
+    const proofUrl = `/uploads/donations/${req.file.filename}`;
 
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
