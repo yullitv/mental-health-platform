@@ -5,6 +5,8 @@ console.log("--- Перевірка ключів ---");
 console.log("Publishable Key існує:", !!process.env.CLERK_PUBLISHABLE_KEY);
 console.log("Secret Key існує:", !!process.env.CLERK_SECRET_KEY);
 console.log("------------------------");
+
+const path = require("path");
 // Зверни увагу на зміну назви пакета в require
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -24,6 +26,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Тепер це запрацює!
 app.use(clerkMiddleware());
