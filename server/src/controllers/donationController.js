@@ -61,7 +61,7 @@ exports.createDonation = async (req, res) => {
         type: "DONATION_SUBMITTED",
         title: "Новий донат очікує підтвердження",
         message: `Клієнт подав підтвердження донату на суму ${amount || "—"} грн`,
-        link: `/donations`,
+        link: `/dashboard`,
       });
     }
 
@@ -168,7 +168,7 @@ exports.confirmDonation = async (req, res) => {
       type: "DONATION_CONFIRMED",
       title: "Донат підтверджено",
       message: "Вашу сесію підтверджено — очікуйте на зустріч.",
-      link: `/sessions/${donation.sessionId}`,
+      link: `/dashboard`,
     });
 
     res.status(200).json(updatedDonation);
@@ -205,7 +205,7 @@ exports.rejectDonation = async (req, res) => {
       type: "DONATION_REJECTED",
       title: "Донат відхилено",
       message: "Ваше підтвердження донату відхилено. Спробуйте подати знову.",
-      link: `/sessions/${donation.sessionId}`,
+      link: `/dashboard`,
     });
 
     res.status(200).json(updatedDonation);
