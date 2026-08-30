@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { SignedIn, UserButton } from "@clerk/clerk-react";
 
 const Header = () => {
   return (
@@ -13,13 +13,6 @@ const Header = () => {
         <span className="font-extrabold text-xl text-ink tracking-tight">Опора</span>
       </div>
       <div>
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-primary-dark transition">
-              Увійти
-            </button>
-          </SignInButton>
-        </SignedOut>
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
         </SignedIn>
