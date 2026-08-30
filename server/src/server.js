@@ -7,8 +7,10 @@ console.log("Secret Key існує:", !!process.env.CLERK_SECRET_KEY);
 console.log("------------------------");
 
 const path = require("path");
+const http = require("http");
 // Зверни увагу на зміну назви пакета в require
 const { clerkMiddleware } = require("@clerk/express");
+const { initSocket } = require("./socket");
 
 const authRoutes = require("./routes/authRoutes");
 const fundraiserRoutes = require("./routes/fundraiserRoutes");
@@ -49,5 +51,8 @@ app.get("/", (req, res) => {
   res.send("Mental Health API with Clerk Express is running...");
 });
 
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Сервер на порту ${PORT}`));
+httpServer.listen(PORT, () => console.log(`Сервер на порту ${PORT}`));

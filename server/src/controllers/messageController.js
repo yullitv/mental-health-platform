@@ -1,5 +1,6 @@
 const prisma = require("../prisma");
 const { createNotification } = require("../utils/notificationHelper");
+const { getIo } = require("../socket");
 
 // Допоміжна перевірка: чи має користувач доступ до сесії
 async function getSessionWithAccessCheck(sessionId, dbUser) {
@@ -51,6 +52,8 @@ exports.sendMessage = async (req, res) => {
         },
       },
     });
+
+    getIo().to(`session:${sessionId}`).emit("newMessage", message);
 
     const recipientId =
       session.clientId === req.dbUser.id

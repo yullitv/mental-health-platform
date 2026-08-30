@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
 import Header from "./Header";
 import { useCurrentUser } from "../../context/CurrentUserContext";
-import { API_BASE_URL } from "../../api/config";
+import { useNotifications } from "../../context/NotificationContext";
 
 const baseNavItems = [
   { to: "/", label: "Головна" },
@@ -14,8 +12,7 @@ const baseNavItems = [
 
 const AppLayout = () => {
   const { dbUser } = useCurrentUser();
-  const { getToken, isSignedIn } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { unreadCount } = useNotifications();
 
   let navItems = baseNavItems;
   if (dbUser?.role === "ADMIN") {
@@ -27,28 +24,6 @@ const AppLayout = () => {
       { to: "/onboarding", label: "Анкета" },
     ];
   }
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-
-    const loadUnreadCount = async () => {
-      try {
-        const token = await getToken();
-        const response = await fetch(`${API_BASE_URL}/notifications`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) return;
-        const data = await response.json();
-        setUnreadCount(data.filter((n) => !n.isRead).length);
-      } catch (err) {
-        console.error("❌ Помилка завантаження сповіщень:", err);
-      }
-    };
-
-    loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, 15000);
-    return () => clearInterval(interval);
-  }, [isSignedIn, getToken]);
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
