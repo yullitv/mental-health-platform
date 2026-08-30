@@ -24,8 +24,7 @@ const AppRoutes = () => {
           <Route path="/specialists" element={<SpecialistsPage />} />
           <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
           <Route path="/diary" element={<DiaryPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-
+          <Route path="/sessions/:id/chat" element={<ChatPage />} />
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminPage />} />
           </Route>
