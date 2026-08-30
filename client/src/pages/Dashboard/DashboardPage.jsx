@@ -131,8 +131,14 @@ const DashboardPage = () => {
                     {donation.amount ? `${donation.amount} грн · ` : ""}
                     {donation.fundraiser?.name}
                   </p>
-                  href={donation.proofUrl}
-                  target="_blank"
+                  <a
+                    href={donation.proofUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    Переглянути підтвердження
+                  </a>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -186,6 +192,12 @@ const DashboardPage = () => {
                 <span className="text-xs font-semibold bg-primary-soft text-primary px-3 py-1 rounded-lg">
                   {STATUS_LABELS[session.status] || session.status}
                 </span>
+                <Link
+                  to={`/sessions/${session.id}/chat`}
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Чат
+                </Link>
                 {dbUser?.role === "CLIENT" && session.status === "CREATED" && (
                   <Link
                     to={`/sessions/${session.id}/donate`}

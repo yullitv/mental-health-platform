@@ -7,7 +7,6 @@ const baseNavItems = [
   { to: "/dashboard", label: "Кабінет" },
   { to: "/specialists", label: "Спеціалісти" },
   { to: "/diary", label: "Щоденник" },
-  { to: "/chat", label: "Чат" },
 ];
 
 const AppLayout = () => {
