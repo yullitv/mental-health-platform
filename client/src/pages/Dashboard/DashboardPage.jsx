@@ -206,6 +206,20 @@ const DashboardPage = () => {
                     Внести донат
                   </Link>
                 )}
+                {dbUser?.role === "CLIENT" &&
+                  session.status === "COMPLETED" &&
+                  (session.review ? (
+                    <span className="text-sm text-muted">
+                      Відгук залишено ({session.review.rating}★)
+                    </span>
+                  ) : (
+                    <Link
+                      to={`/sessions/${session.id}/review`}
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      Залишити відгук
+                    </Link>
+                  ))}
                 {dbUser?.role === "SPECIALIST" &&
                   session.status === "CONFIRMED" && (
                     <button
