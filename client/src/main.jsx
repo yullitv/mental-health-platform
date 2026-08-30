@@ -5,6 +5,8 @@ import App from './App.jsx'
 import './index.css'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { CurrentUserProvider } from './context/CurrentUserContext'
+import { SocketProvider } from './context/SocketContext'
+import { NotificationProvider } from './context/NotificationContext'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -16,9 +18,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <CurrentUserProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <SocketProvider>
+          <NotificationProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </NotificationProvider>
+        </SocketProvider>
       </CurrentUserProvider>
     </ClerkProvider>
   </React.StrictMode>,

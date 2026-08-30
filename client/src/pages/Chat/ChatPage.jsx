@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
+import { useSocket } from "../../context/SocketContext";
 import { API_BASE_URL } from "../../api/config";
 
 const formatTime = (iso) =>
@@ -16,6 +17,7 @@ const ChatPage = () => {
   const { id: sessionId } = useParams();
   const { getToken } = useAuth();
   const { dbUser } = useCurrentUser();
+  const socket = useSocket();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -46,9 +48,25 @@ const ChatPage = () => {
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 4000);
-    return () => clearInterval(interval);
   }, [loadMessages]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("joinSession", sessionId);
+
+    const handleNewMessage = (message) => {
+      if (message.sessionId !== sessionId) return;
+      setMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.emit("leaveSession", sessionId);
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, sessionId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,7 +92,6 @@ const ChatPage = () => {
         throw new Error(data.message || "Не вдалось надіслати повідомлення");
       }
       setText("");
-      await loadMessages();
     } catch (err) {
       console.error("❌ Помилка відправки:", err);
       setError(err.message);
