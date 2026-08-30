@@ -52,7 +52,7 @@ exports.bookSlot = async (req, res) => {
         type: "SESSION_BOOKED",
         title: "Нове бронювання",
         message: `У вас нова сесія на ${session.startTime.toLocaleString("uk-UA")}`,
-        link: `/sessions/${session.id}`,
+        link: `/dashboard`,
       });
     }
 
@@ -107,7 +107,6 @@ exports.getMySessions = async (req, res) => {
   }
 };
 
-
 // PUT /api/sessions/:id/complete — спеціаліст позначає сесію завершеною
 exports.completeSession = async (req, res) => {
   try {
@@ -119,23 +118,25 @@ exports.completeSession = async (req, res) => {
     });
 
     if (!session) {
-      return res.status(404).json({ message: 'Сесію не знайдено' });
+      return res.status(404).json({ message: "Сесію не знайдено" });
     }
     if (session.specialist.userId !== req.dbUser.id) {
-      return res.status(403).json({ message: 'Це не ваша сесія' });
+      return res.status(403).json({ message: "Це не ваша сесія" });
     }
-    if (session.status !== 'CONFIRMED') {
-      return res.status(409).json({ message: 'Завершити можна лише підтверджену сесію' });
+    if (session.status !== "CONFIRMED") {
+      return res
+        .status(409)
+        .json({ message: "Завершити можна лише підтверджену сесію" });
     }
 
     const updated = await prisma.session.update({
       where: { id },
-      data: { status: 'COMPLETED' },
+      data: { status: "COMPLETED" },
     });
 
     res.status(200).json(updated);
   } catch (error) {
-    console.error('❌ Помилка завершення сесії:', error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error("❌ Помилка завершення сесії:", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };

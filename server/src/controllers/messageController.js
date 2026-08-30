@@ -62,7 +62,7 @@ exports.sendMessage = async (req, res) => {
       type: "NEW_MESSAGE",
       title: "Нове повідомлення",
       message: content.trim().slice(0, 100),
-      link: `/sessions/${sessionId}`,
+      link: `/sessions/${sessionId}/chat`,
     });
 
     res.status(201).json(message);
