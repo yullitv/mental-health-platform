@@ -122,22 +122,6 @@ model Session {
   updatedAt       DateTime          @updatedAt
 }
 
-model DiaryEntry {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  moodScore   Int      // 1-10
-  moodTags    String[] // ["робота", "сім'я", "тривога"]
-  textContent String?  @db.Text // Текст щоденника
-
-  sleepHours  Float?
-  workoutDone Boolean  @default(false)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 // НОВЕ: фонд/збір, куди можна задонатити замість оплати сесії
 model Fundraiser {
   id          String     @id @default(cuid())
@@ -239,6 +223,22 @@ model Review {
   comment      String?           @db.Text
 
   createdAt    DateTime          @default(now())
+}
+
+model DiaryEntry {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date          DateTime
+  mood          Int
+  physicalState Int
+  sleepHours    Float?
+  note          String?  @db.Text
+
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, date])
 }
 
 // НОВЕ: відповіді клієнта на онбординг-опитування (для smart matching)
