@@ -6,25 +6,20 @@ function normalizeDate(input) {
   return d;
 }
 
-// POST /api/diary — записати (або оновити) запис за день
+const MAX_CIPHERTEXT_LENGTH = 20000;
+
+// POST /api/diary — записати (або оновити) зашифрований запис за день.
+// Сервер НЕ бачить mood/physicalState/sleepHours/note у відкритому вигляді —
+// вони зашифровані на клієнті (AES-GCM), тут лише opaque-блоб cipherText.
 exports.upsertEntry = async (req, res) => {
   try {
-    const { date, mood, physicalState, sleepHours, note } = req.body;
+    const { date, cipherText } = req.body;
 
-    const moodNum = Number(mood);
-    const physicalStateNum = Number(physicalState);
-
-    if (
-      !Number.isInteger(moodNum) ||
-      moodNum < 1 ||
-      moodNum > 5 ||
-      !Number.isInteger(physicalStateNum) ||
-      physicalStateNum < 1 ||
-      physicalStateNum > 5
-    ) {
-      return res.status(400).json({
-        message: "mood і physicalState мають бути цілими числами від 1 до 5",
-      });
+    if (typeof cipherText !== "string" || cipherText.length === 0) {
+      return res.status(400).json({ message: "cipherText обов'язковий" });
+    }
+    if (cipherText.length > MAX_CIPHERTEXT_LENGTH) {
+      return res.status(400).json({ message: "Запис занадто великий" });
     }
 
     const entryDate = normalizeDate(date);
@@ -33,19 +28,11 @@ exports.upsertEntry = async (req, res) => {
       where: {
         userId_date: { userId: req.dbUser.id, date: entryDate },
       },
-      update: {
-        mood: moodNum,
-        physicalState: physicalStateNum,
-        sleepHours: sleepHours !== undefined ? Number(sleepHours) : null,
-        note: note || null,
-      },
+      update: { cipherText },
       create: {
         userId: req.dbUser.id,
         date: entryDate,
-        mood: moodNum,
-        physicalState: physicalStateNum,
-        sleepHours: sleepHours !== undefined ? Number(sleepHours) : null,
-        note: note || null,
+        cipherText,
       },
     });
 
@@ -56,7 +43,8 @@ exports.upsertEntry = async (req, res) => {
   }
 };
 
-// GET /api/diary/mine — усі записи поточного користувача
+// GET /api/diary/mine — усі зашифровані записи поточного користувача.
+// Розшифровка відбувається виключно на клієнті ключем, якого сервер не має.
 exports.getMyEntries = async (req, res) => {
   try {
     const entries = await prisma.diaryEntry.findMany({
