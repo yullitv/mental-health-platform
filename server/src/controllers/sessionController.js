@@ -85,6 +85,7 @@ exports.getMySessions = async (req, res) => {
         where: { specialistId: profile.id },
         include: {
           client: { select: { firstName: true, lastName: true, email: true } },
+          review: true,
         },
         orderBy: { startTime: "desc" },
       });
@@ -95,6 +96,7 @@ exports.getMySessions = async (req, res) => {
           specialist: {
             include: { user: { select: { firstName: true, lastName: true } } },
           },
+          review: true,
         },
         orderBy: { startTime: "desc" },
       });
