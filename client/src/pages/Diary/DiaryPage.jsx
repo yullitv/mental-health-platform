@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
+import {
+  clearStoredKey,
+  decryptEntry,
+  encryptEntry,
+  ensureKey,
+  generateKey,
+  storeKey,
+  tryDecrypt,
+} from "../../utils/diaryCrypto";
 
 const SCALE = [1, 2, 3, 4, 5];
 
@@ -98,8 +107,112 @@ const DiaryChart = ({ entries }) => {
   );
 };
 
+// Екран, що з'являється, коли в браузері немає ключа, а в БД вже є
+// зашифровані записи (наприклад, новий пристрій) — потрібно ввести
+// існуючий ключ або свідомо почати щоденник заново.
+const KeyGate = ({ onImport, onReset, error, isChecking }) => {
+  const [value, setValue] = useState("");
+
+  return (
+    <div className="max-w-lg mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 space-y-4">
+      <h2 className="text-xl font-extrabold text-ink">
+        Потрібен ключ шифрування
+      </h2>
+      <p className="text-sm text-muted">
+        У цьому браузері немає ключа для щоденника, а в базі вже є зашифровані
+        записи. Введи ключ, який ти зберігала раніше (з іншого пристрою), щоб
+        розшифрувати їх тут.
+      </p>
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={2}
+        placeholder="Встав ключ шифрування сюди"
+        className="w-full border border-border rounded-xl px-4 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={isChecking || !value.trim()}
+          onClick={() => onImport(value.trim())}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
+        >
+          Використати цей ключ
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-canvas border border-border text-ink hover:border-primary transition"
+        >
+          У мене немає ключа — почати заново
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        "Почати заново" створить новий ключ. Старі записи залишаться в базі,
+        але без правильного ключа їх більше не можна буде прочитати.
+      </p>
+    </div>
+  );
+};
+
+const KeyBackupBanner = ({ encryptionKey, onDismiss }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(encryptionKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 space-y-3">
+      <h3 className="text-base font-extrabold text-ink">
+        🔑 Збережи свій ключ шифрування
+      </h3>
+      <p className="text-sm text-ink">
+        Записи щоденника шифруються прямо в браузері — навіть ми не можемо їх
+        прочитати. Але це означає, що без цього ключа записи не відкриються на
+        іншому пристрої чи в іншому браузері. Збережи його в надійному місці
+        (наприклад, менеджер паролів).
+      </p>
+      <div className="bg-white border border-border rounded-xl p-3 font-mono text-xs break-all">
+        {encryptionKey}
+      </div>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={copy}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition"
+        >
+          {copied ? "Скопійовано ✓" : "Скопіювати ключ"}
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-canvas border border-border text-ink hover:border-primary transition"
+        >
+          Я зберегла, приховати
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const DiaryPage = () => {
   const { getToken } = useAuth();
+
+  // 'loading' | 'need-key' | 'ready'
+  const [keyStatus, setKeyStatus] = useState("loading");
+  const [encryptionKey, setEncryptionKey] = useState(null);
+  const [showBackupBanner, setShowBackupBanner] = useState(false);
+  const [keyGateError, setKeyGateError] = useState("");
+
+  const [rawEntries, setRawEntries] = useState([]);
   const [entries, setEntries] = useState([]);
   const [selectedDate, setSelectedDate] = useState(dateKeyOffset(0));
   const [mood, setMood] = useState(3);
@@ -111,28 +224,82 @@ const DiaryPage = () => {
   const [error, setError] = useState("");
   const [savedMessage, setSavedMessage] = useState("");
 
-  const loadEntries = useCallback(async () => {
+  const loadRawEntries = useCallback(async () => {
     try {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/diary/mine`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Не вдалось завантажити щоденник");
-      setEntries(await response.json());
+      const data = await response.json();
+      setRawEntries(data);
+      return data;
     } catch (err) {
       console.error("❌ Помилка щоденника:", err);
       setError("Не вдалось завантажити щоденник.");
+      return [];
     } finally {
       setIsLoading(false);
     }
   }, [getToken]);
 
+  // Початкове завантаження: спершу тягнемо зашифровані записи, тоді
+  // вирішуємо, чи є в браузері ключ, чи потрібно його запитати.
   useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+    let cancelled = false;
+    (async () => {
+      const data = await loadRawEntries();
+      if (cancelled) return;
+      const { key, isNew } = await ensureKey(data.length > 0);
+      if (cancelled) return;
+      if (key) {
+        setEncryptionKey(key);
+        setKeyStatus("ready");
+        if (isNew) setShowBackupBanner(true);
+      } else {
+        setKeyStatus("need-key");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Розшифровка записів кожного разу, коли з'являється ключ або приходять нові дані.
+  useEffect(() => {
+    if (keyStatus !== "ready" || !encryptionKey) return;
+    let cancelled = false;
+    (async () => {
+      const decrypted = await Promise.all(
+        rawEntries.map(async (raw) => {
+          try {
+            const data = await decryptEntry(encryptionKey, raw.cipherText);
+            return { id: raw.id, date: raw.date, ...data };
+          } catch {
+            return {
+              id: raw.id,
+              date: raw.date,
+              decryptFailed: true,
+              mood: null,
+              physicalState: null,
+              sleepHours: null,
+              note: null,
+            };
+          }
+        }),
+      );
+      if (!cancelled) setEntries(decrypted);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rawEntries, encryptionKey, keyStatus]);
 
   useEffect(() => {
-    const existing = entries.find((e) => entryKey(e.date) === selectedDate);
+    const existing = entries.find(
+      (e) => entryKey(e.date) === selectedDate && !e.decryptFailed,
+    );
     if (existing) {
       setMood(existing.mood);
       setPhysicalState(existing.physicalState);
@@ -147,12 +314,48 @@ const DiaryPage = () => {
     setSavedMessage("");
   }, [selectedDate, entries]);
 
+  const handleImportKey = async (candidate) => {
+    setKeyGateError("");
+    if (rawEntries.length > 0) {
+      const sample = rawEntries[0];
+      const ok = await tryDecrypt(candidate, sample.cipherText);
+      if (!ok) {
+        setKeyGateError("Цей ключ не підходить до наявних записів.");
+        return;
+      }
+    }
+    storeKey(candidate);
+    setEncryptionKey(candidate);
+    setKeyStatus("ready");
+  };
+
+  const handleResetKey = async () => {
+    const confirmed = window.confirm(
+      "Старі записи залишаться в базі, але без правильного ключа їх більше не можна буде прочитати. Створити новий ключ і почати заново?",
+    );
+    if (!confirmed) return;
+    clearStoredKey();
+    const fresh = await generateKey();
+    storeKey(fresh);
+    setEncryptionKey(fresh);
+    setKeyStatus("ready");
+    setShowBackupBanner(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!encryptionKey) return;
     setIsSaving(true);
     setError("");
     setSavedMessage("");
     try {
+      const cipherText = await encryptEntry(encryptionKey, {
+        mood,
+        physicalState,
+        sleepHours: sleepHours === "" ? null : Number(sleepHours),
+        note: note.trim() || null,
+      });
+
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/diary`, {
         method: "POST",
@@ -160,20 +363,14 @@ const DiaryPage = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          date: selectedDate,
-          mood,
-          physicalState,
-          sleepHours: sleepHours === "" ? undefined : Number(sleepHours),
-          note: note.trim() || undefined,
-        }),
+        body: JSON.stringify({ date: selectedDate, cipherText }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.message || "Не вдалось зберегти запис");
       }
       setSavedMessage("Запис збережено.");
-      await loadEntries();
+      await loadRawEntries();
     } catch (err) {
       console.error("❌ Помилка збереження:", err);
       setError(err.message);
@@ -182,22 +379,61 @@ const DiaryPage = () => {
     }
   };
 
+  const validEntries = useMemo(
+    () => entries.filter((e) => !e.decryptFailed),
+    [entries],
+  );
+
   const correlation = useMemo(() => {
-    if (entries.length < 3) return null;
+    if (validEntries.length < 3) return null;
     return pearsonCorrelation(
-      entries.map((e) => e.mood),
-      entries.map((e) => e.physicalState),
+      validEntries.map((e) => e.mood),
+      validEntries.map((e) => e.physicalState),
     );
-  }, [entries]);
+  }, [validEntries]);
 
   const recentEntries = [...entries].reverse();
 
+  if (keyStatus === "loading") {
+    return <p className="text-muted text-center mt-8">Завантаження...</p>;
+  }
+
+  if (keyStatus === "need-key") {
+    return (
+      <KeyGate
+        onImport={handleImportKey}
+        onReset={handleResetKey}
+        error={keyGateError}
+        isChecking={false}
+      />
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto text-left space-y-6">
+      {showBackupBanner && (
+        <KeyBackupBanner
+          encryptionKey={encryptionKey}
+          onDismiss={() => setShowBackupBanner(false)}
+        />
+      )}
+
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h2 className="text-2xl font-extrabold text-ink mb-4">
-          Щоденник настрою
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-extrabold text-ink">Щоденник настрою</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted">🔒 зашифровано локально</span>
+            {!showBackupBanner && (
+              <button
+                type="button"
+                onClick={() => setShowBackupBanner(true)}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                Показати ключ
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="flex gap-2 mb-4">
           {DAY_OPTIONS.map((opt) => {
@@ -280,14 +516,14 @@ const DiaryPage = () => {
         <h3 className="text-xl font-extrabold text-ink mb-2">Динаміка</h3>
 
         {isLoading && <p className="text-muted">Завантаження...</p>}
-        {!isLoading && entries.length < 2 && (
+        {!isLoading && validEntries.length < 2 && (
           <p className="text-muted">
             Додай ще кілька записів, щоб побачити графік динаміки.
           </p>
         )}
-        {!isLoading && entries.length >= 2 && (
+        {!isLoading && validEntries.length >= 2 && (
           <>
-            <DiaryChart entries={entries} />
+            <DiaryChart entries={validEntries} />
             <div className="flex gap-4 text-sm mt-2">
               <span className="flex items-center gap-1">
                 <span className="w-3 h-3 rounded-full bg-primary inline-block" />
@@ -319,21 +555,29 @@ const DiaryPage = () => {
               key={entry.id}
               className="bg-canvas border border-border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
             >
-              <div>
-                <p className="text-sm font-semibold text-ink">
-                  {formatDate(entry.date)}
+              {entry.decryptFailed ? (
+                <p className="text-sm text-muted">
+                  {formatDate(entry.date)} — 🔒 не вдалося розшифрувати (інший ключ)
                 </p>
-                {entry.note && (
-                  <p className="text-sm text-muted mt-1">{entry.note}</p>
-                )}
-              </div>
-              <div className="flex gap-3 text-sm">
-                <span>Настрій: {entry.mood}/5</span>
-                <span>Стан: {entry.physicalState}/5</span>
-                {entry.sleepHours != null && (
-                  <span>Сон: {entry.sleepHours} год</span>
-                )}
-              </div>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      {formatDate(entry.date)}
+                    </p>
+                    {entry.note && (
+                      <p className="text-sm text-muted mt-1">{entry.note}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-3 text-sm">
+                    <span>Настрій: {entry.mood}/5</span>
+                    <span>Стан: {entry.physicalState}/5</span>
+                    {entry.sleepHours != null && (
+                      <span>Сон: {entry.sleepHours} год</span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
