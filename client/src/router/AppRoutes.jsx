@@ -25,7 +25,6 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/specialists" element={<SpecialistsPage />} />
           <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
-          <Route path="/diary" element={<DiaryPage />} />
           <Route path="/sessions/:id/chat" element={<ChatPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
@@ -34,8 +33,9 @@ const AppRoutes = () => {
 
           <Route element={<RoleRoute allow={["CLIENT"]} />}>
             <Route path="/sessions/:id/donate" element={<DonationPage />} />
-            <Route path="/sessions/:id/review" element={<ReviewPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/sessions/:id/review" element={<ReviewPage />} />
+            <Route path="/diary" element={<DiaryPage />} />
           </Route>
         </Route>
 

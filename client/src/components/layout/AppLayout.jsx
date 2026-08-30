@@ -9,7 +9,6 @@ const baseNavItems = [
   { to: "/", label: "Головна" },
   { to: "/dashboard", label: "Кабінет" },
   { to: "/specialists", label: "Спеціалісти" },
-  { to: "/diary", label: "Щоденник" },
   { to: "/notifications", label: "Сповіщення" },
 ];
 
@@ -22,7 +21,11 @@ const AppLayout = () => {
   if (dbUser?.role === "ADMIN") {
     navItems = [...baseNavItems, { to: "/admin", label: "Адмін-панель" }];
   } else if (dbUser?.role === "CLIENT") {
-    navItems = [...baseNavItems, { to: "/onboarding", label: "Анкета" }];
+    navItems = [
+      ...baseNavItems,
+      { to: "/diary", label: "Щоденник" },
+      { to: "/onboarding", label: "Анкета" },
+    ];
   }
 
   useEffect(() => {
