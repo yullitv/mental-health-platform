@@ -226,17 +226,16 @@ model Review {
 }
 
 model DiaryEntry {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  date          DateTime
-  mood          Int
-  physicalState Int
-  sleepHours    Float?
-  note          String?  @db.Text
+  date       DateTime
+  // Зашифровано на клієнті (AES-GCM), сервер зберігає лише незрозумілий блоб.
+  // Містить base64(iv + ciphertext) для JSON {mood, physicalState, sleepHours, note}.
+  cipherText String   @db.Text
 
-  createdAt     DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   @@unique([userId, date])
 }
