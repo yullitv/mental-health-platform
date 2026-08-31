@@ -21,6 +21,7 @@ const AppLayout = () => {
     navItems = [
       ...baseNavItems,
       { to: "/diary", label: "Щоденник" },
+      { to: "/thought-analysis", label: "Аналіз думки" },
       { to: "/onboarding", label: "Анкета" },
     ];
   }
