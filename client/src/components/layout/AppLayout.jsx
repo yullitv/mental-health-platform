@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, Link } from "react-router-dom";
 import Header from "./Header";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { useNotifications } from "../../context/NotificationContext";
@@ -57,6 +57,15 @@ const AppLayout = () => {
       <main className="flex-1 px-4 pb-8">
         <Outlet />
       </main>
+
+      {dbUser?.role === "CLIENT" && (
+        <Link
+          to="/crisis"
+          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-full text-sm font-semibold bg-danger text-white shadow-[0_8px_20px_rgba(226,87,76,0.35)] hover:bg-danger/90 transition"
+        >
+          🤍 Потрібна допомога
+        </Link>
+      )}
     </div>
   );
 };
