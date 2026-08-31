@@ -1,7 +1,12 @@
 import AppRoutes from "./router/AppRoutes";
+import AppLockGate from "./components/lock/AppLockGate";
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <AppLockGate>
+      <AppRoutes />
+    </AppLockGate>
+  );
 }
 
 export default App;
