@@ -66,6 +66,7 @@ model User {
   clientSessions    Session[]           @relation("ClientSessions")
   diaryEntries      DiaryEntry[]
   screeningResults  ScreeningResult[]
+  safetyPlan        SafetyPlan?
 
   // НОВЕ
   sentMessages      Message[]
@@ -254,6 +255,22 @@ model ScreeningResult {
   cipherText String   @db.Text
 
   createdAt  DateTime @default(now())
+}
+
+// "Аптечка ресурсу" (Safety Plan) — персональний список того, що повертає
+// до стабільного стану: прості дії, спогади, цитати, посилання на плейлисти,
+// довірені контакти. Один запис на користувача (не по днях, як щоденник),
+// той самий підхід E2EE й той самий локальний ключ шифрування — сервер
+// бачить лише сам факт наявності запису, увесь вміст зашифрований.
+model SafetyPlan {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cipherText String   @db.Text
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // НОВЕ: відповіді клієнта на онбординг-опитування (для smart matching)

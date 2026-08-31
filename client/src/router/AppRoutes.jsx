@@ -19,6 +19,7 @@ import ScreeningPage from "../pages/Screening/ScreeningPage";
 import BreathingPage from "../pages/Breathing/BreathingPage";
 import CompanionPage from "../pages/Companion/CompanionPage";
 import PrivacySettingsPage from "../pages/Privacy/PrivacySettingsPage";
+import SafetyPlanPage from "../pages/SafetyPlan/SafetyPlanPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -48,6 +49,7 @@ const AppRoutes = () => {
             <Route path="/breathing" element={<BreathingPage />} />
             <Route path="/companion" element={<CompanionPage />} />
             <Route path="/privacy" element={<PrivacySettingsPage />} />
+            <Route path="/safety-plan" element={<SafetyPlanPage />} />
           </Route>
         </Route>
 

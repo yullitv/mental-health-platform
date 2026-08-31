@@ -90,6 +90,22 @@ const CrisisPage = () => {
         </Link>
       </div>
 
+      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
+        <h3 className="text-lg font-extrabold text-ink mb-2">
+          🧰 Твоя аптечка ресурсу
+        </h3>
+        <p className="text-sm text-muted mb-4">
+          Спогади, дії й люди, які раніше вже допомагали тобі почуватись
+          краще — якщо ти заповнювала її заздалегідь.
+        </p>
+        <Link
+          to="/safety-plan"
+          className="inline-block px-5 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition"
+        >
+          Відкрити аптечку →
+        </Link>
+      </div>
+
       {!isLoading && activeSession && (
         <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
           <h3 className="text-lg font-extrabold text-ink mb-2">
