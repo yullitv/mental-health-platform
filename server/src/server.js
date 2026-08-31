@@ -8,6 +8,7 @@ console.log("------------------------");
 
 const path = require("path");
 const http = require("http");
+const helmet = require("helmet");
 // Зверни увагу на зміну назви пакета в require
 const { clerkMiddleware } = require("@clerk/express");
 const { initSocket } = require("./socket");
@@ -26,6 +27,13 @@ const diaryRoutes = require("./routes/diaryRoutes");
 
 const app = express();
 
+app.use(
+  helmet({
+    // Дозволяємо клієнту (інший origin) завантажувати картинки з /uploads —
+    // дефолтна політика helmet це блокує
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 app.use(cors());
 app.use(express.json());
 
