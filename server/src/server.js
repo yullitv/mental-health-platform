@@ -24,6 +24,7 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const onboardingRoutes = require("./routes/onboardingRoutes");
 const specialistRoutes = require("./routes/specialistRoutes");
 const diaryRoutes = require("./routes/diaryRoutes");
+const thoughtAnalysisRoutes = require("./routes/thoughtAnalysisRoutes");
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/specialists", specialistRoutes);
 app.use("/api/diary", diaryRoutes);
+app.use("/api/thought-analysis", thoughtAnalysisRoutes);
 
 
 app.get("/", (req, res) => {
