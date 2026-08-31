@@ -23,6 +23,7 @@ const AppLayout = () => {
       { to: "/diary", label: "Щоденник" },
       { to: "/thought-analysis", label: "Аналіз думки" },
       { to: "/screening", label: "Тести" },
+      { to: "/breathing", label: "Дихання" },
       { to: "/onboarding", label: "Анкета" },
     ];
   }

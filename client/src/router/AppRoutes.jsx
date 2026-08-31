@@ -16,6 +16,7 @@ import ReviewPage from "../pages/Review/ReviewPage";
 import ThoughtAnalysisPage from "../pages/ThoughtAnalysis/ThoughtAnalysisPage";
 import CrisisPage from "../pages/Crisis/CrisisPage";
 import ScreeningPage from "../pages/Screening/ScreeningPage";
+import BreathingPage from "../pages/Breathing/BreathingPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -42,6 +43,7 @@ const AppRoutes = () => {
             <Route path="/thought-analysis" element={<ThoughtAnalysisPage />} />
             <Route path="/crisis" element={<CrisisPage />} />
             <Route path="/screening" element={<ScreeningPage />} />
+            <Route path="/breathing" element={<BreathingPage />} />
           </Route>
         </Route>
 
