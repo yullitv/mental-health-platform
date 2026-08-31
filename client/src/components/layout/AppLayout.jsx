@@ -24,6 +24,7 @@ const AppLayout = () => {
       { to: "/thought-analysis", label: "Аналіз думки" },
       { to: "/screening", label: "Тести" },
       { to: "/breathing", label: "Дихання" },
+      { to: "/companion", label: "AI-розмова" },
       { to: "/onboarding", label: "Анкета" },
     ];
   }
