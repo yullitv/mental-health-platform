@@ -217,6 +217,9 @@ const DiaryPage = () => {
   const [selectedDate, setSelectedDate] = useState(dateKeyOffset(0));
   const [mood, setMood] = useState(3);
   const [physicalState, setPhysicalState] = useState(3);
+  const [energy, setEnergy] = useState(3);
+  const [anxiety, setAnxiety] = useState(3);
+  const [stress, setStress] = useState(3);
   const [sleepHours, setSleepHours] = useState("");
   const [note, setNote] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -303,11 +306,17 @@ const DiaryPage = () => {
     if (existing) {
       setMood(existing.mood);
       setPhysicalState(existing.physicalState);
+      setEnergy(existing.energy ?? 3);
+      setAnxiety(existing.anxiety ?? 3);
+      setStress(existing.stress ?? 3);
       setSleepHours(existing.sleepHours ?? "");
       setNote(existing.note ?? "");
     } else {
       setMood(3);
       setPhysicalState(3);
+      setEnergy(3);
+      setAnxiety(3);
+      setStress(3);
       setSleepHours("");
       setNote("");
     }
@@ -352,6 +361,9 @@ const DiaryPage = () => {
       const cipherText = await encryptEntry(encryptionKey, {
         mood,
         physicalState,
+        energy,
+        anxiety,
+        stress,
         sleepHours: sleepHours === "" ? null : Number(sleepHours),
         note: note.trim() || null,
       });
@@ -456,18 +468,38 @@ const DiaryPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <ScalePicker
-            label="Настрій"
-            value={mood}
-            onChange={setMood}
-            color="bg-primary"
-          />
-          <ScalePicker
-            label="Фізичний стан"
-            value={physicalState}
-            onChange={setPhysicalState}
-            color="bg-amber-500"
-          />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <ScalePicker
+              label="Настрій"
+              value={mood}
+              onChange={setMood}
+              color="bg-primary"
+            />
+            <ScalePicker
+              label="Фізичний стан"
+              value={physicalState}
+              onChange={setPhysicalState}
+              color="bg-amber-500"
+            />
+            <ScalePicker
+              label="Енергія"
+              value={energy}
+              onChange={setEnergy}
+              color="bg-emerald-500"
+            />
+            <ScalePicker
+              label="Тривожність"
+              value={anxiety}
+              onChange={setAnxiety}
+              color="bg-rose-500"
+            />
+            <ScalePicker
+              label="Стрес"
+              value={stress}
+              onChange={setStress}
+              color="bg-orange-500"
+            />
+          </div>
 
           <div>
             <label className="text-sm font-semibold text-ink mb-2 block">
@@ -569,9 +601,14 @@ const DiaryPage = () => {
                       <p className="text-sm text-muted mt-1">{entry.note}</p>
                     )}
                   </div>
-                  <div className="flex gap-3 text-sm">
+                  <div className="flex flex-wrap gap-3 text-sm">
                     <span>Настрій: {entry.mood}/5</span>
                     <span>Стан: {entry.physicalState}/5</span>
+                    {entry.energy != null && <span>Енергія: {entry.energy}/5</span>}
+                    {entry.anxiety != null && (
+                      <span>Тривожність: {entry.anxiety}/5</span>
+                    )}
+                    {entry.stress != null && <span>Стрес: {entry.stress}/5</span>}
                     {entry.sleepHours != null && (
                       <span>Сон: {entry.sleepHours} год</span>
                     )}
