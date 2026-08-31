@@ -65,6 +65,7 @@ model User {
   specialistProfile SpecialistProfile?
   clientSessions    Session[]           @relation("ClientSessions")
   diaryEntries      DiaryEntry[]
+  screeningResults  ScreeningResult[]
 
   // НОВЕ
   sentMessages      Message[]
@@ -238,6 +239,21 @@ model DiaryEntry {
   createdAt  DateTime @default(now())
 
   @@unique([userId, date])
+}
+
+// Результати скринінг-тестів (PHQ-9 / GAD-7). Той самий підхід E2EE, що й
+// у DiaryEntry, і той самий локальний ключ шифрування — сервер бачить лише
+// testKey (яку шкалу проходили) та дату, все інше (бали, відповіді) зашифровано.
+model ScreeningResult {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  testKey    String // "phq9" | "gad7"
+  date       DateTime @default(now())
+  cipherText String   @db.Text
+
+  createdAt  DateTime @default(now())
 }
 
 // НОВЕ: відповіді клієнта на онбординг-опитування (для smart matching)

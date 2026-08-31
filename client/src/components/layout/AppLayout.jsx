@@ -22,6 +22,7 @@ const AppLayout = () => {
       ...baseNavItems,
       { to: "/diary", label: "Щоденник" },
       { to: "/thought-analysis", label: "Аналіз думки" },
+      { to: "/screening", label: "Тести" },
       { to: "/onboarding", label: "Анкета" },
     ];
   }
