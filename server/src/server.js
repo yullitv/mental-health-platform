@@ -25,6 +25,7 @@ const onboardingRoutes = require("./routes/onboardingRoutes");
 const specialistRoutes = require("./routes/specialistRoutes");
 const diaryRoutes = require("./routes/diaryRoutes");
 const thoughtAnalysisRoutes = require("./routes/thoughtAnalysisRoutes");
+const screeningRoutes = require("./routes/screeningRoutes");
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/specialists", specialistRoutes);
 app.use("/api/diary", diaryRoutes);
 app.use("/api/thought-analysis", thoughtAnalysisRoutes);
+app.use("/api/screening", screeningRoutes);
 
 
 app.get("/", (req, res) => {
