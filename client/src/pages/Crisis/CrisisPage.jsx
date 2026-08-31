@@ -82,6 +82,12 @@ const CrisisPage = () => {
             </div>
           ))}
         </div>
+        <Link
+          to="/breathing"
+          className="inline-block mt-4 text-sm font-semibold text-primary hover:underline"
+        >
+          Спробувати дихальну вправу →
+        </Link>
       </div>
 
       {!isLoading && activeSession && (
