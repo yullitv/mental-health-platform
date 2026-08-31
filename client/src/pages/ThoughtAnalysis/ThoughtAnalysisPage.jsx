@@ -1,29 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
-
-// Перевірені кризові ресурси для України (не генеруються AI навмисно —
-// ризик, що модель вигадає неправильний номер, неприпустимий для цієї фічі).
-const CRISIS_RESOURCES = [
-  {
-    name: "Lifeline Ukraine — профілактика самогубств",
-    phone: "7333",
-    tel: "7333",
-    note: "Цілодобово, безкоштовно з мобільного",
-  },
-  {
-    name: '"Людина в біді"',
-    phone: "0 800 210 160",
-    tel: "0800210160",
-    note: "Цілодобово, безкоштовно",
-  },
-  {
-    name: "Екстрена допомога",
-    phone: "112",
-    tel: "112",
-    note: "Якщо життю загрожує безпосередня небезпека просто зараз",
-  },
-];
+import { CRISIS_RESOURCES } from "../../constants/crisisResources";
 
 const STEPS = [
   { key: "fact", icon: "📌", label: "Факт" },
@@ -149,6 +128,13 @@ const ThoughtAnalysisPage = () => {
               </a>
             ))}
           </div>
+
+          <Link
+            to="/crisis"
+            className="text-sm font-semibold text-danger hover:underline"
+          >
+            Відкрити повноцінний екран підтримки →
+          </Link>
         </div>
       )}
 
