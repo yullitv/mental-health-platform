@@ -13,6 +13,7 @@ import AdminPage from "../pages/Admin/AdminPage";
 import DonationPage from "../pages/Donation/DonationPage";
 import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import ReviewPage from "../pages/Review/ReviewPage";
+import ThoughtAnalysisPage from "../pages/ThoughtAnalysis/ThoughtAnalysisPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 const AppRoutes = () => {
@@ -36,6 +37,7 @@ const AppRoutes = () => {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/sessions/:id/review" element={<ReviewPage />} />
             <Route path="/diary" element={<DiaryPage />} />
+            <Route path="/thought-analysis" element={<ThoughtAnalysisPage />} />
           </Route>
         </Route>
 
