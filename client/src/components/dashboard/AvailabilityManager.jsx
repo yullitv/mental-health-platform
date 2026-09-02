@@ -11,7 +11,7 @@ const formatSlot = (iso) =>
     minute: "2-digit",
   });
 
-const AvailabilityPage = () => {
+const AvailabilityManager = () => {
   const { getToken } = useAuth();
   const [slots, setSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,9 +122,9 @@ const AvailabilityPage = () => {
     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
   return (
-    <div className="max-w-2xl mx-auto text-left space-y-6">
-      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h2 className="text-2xl font-extrabold text-ink mb-2">Вільні дати</h2>
+    <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 space-y-4">
+      <div>
+        <h2 className="text-xl font-extrabold text-ink mb-1">Вільні дати</h2>
         <p className="text-sm text-muted">
           Додай час, коли ти доступна для сесій — клієнти побачать ці слоти на
           твоїй публічній картці й зможуть забронювати.
@@ -140,11 +140,7 @@ const AvailabilityPage = () => {
         <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
       )}
 
-      <form
-        onSubmit={handleCreate}
-        className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 space-y-4"
-      >
-        <h3 className="text-base font-extrabold text-ink">Додати вільний час</h3>
+      <form onSubmit={handleCreate} className="space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="date"
@@ -174,49 +170,45 @@ const AvailabilityPage = () => {
         </button>
       </form>
 
-      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h3 className="text-base font-extrabold text-ink mb-4">Мої слоти</h3>
+      {isLoading && <p className="text-muted">Завантаження...</p>}
+      {!isLoading && upcomingSlots.length === 0 && (
+        <p className="text-muted">Поки немає доданих вільних дат.</p>
+      )}
 
-        {isLoading && <p className="text-muted">Завантаження...</p>}
-        {!isLoading && upcomingSlots.length === 0 && (
-          <p className="text-muted">Поки немає доданих вільних дат.</p>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {upcomingSlots.map((slot) => (
-            <div
-              key={slot.id}
-              className="flex items-center justify-between gap-3 bg-canvas border border-border rounded-xl p-4"
-            >
-              <div>
-                <p className="font-semibold text-ink">
-                  {formatSlot(slot.startTime)} – {formatSlot(slot.endTime).split(", ").pop()}
-                </p>
-                <span
-                  className={`text-xs font-semibold px-2 py-1 rounded-lg ${
-                    slot.isBooked
-                      ? "bg-primary-soft text-primary"
-                      : "bg-accent-soft text-accent"
-                  }`}
-                >
-                  {slot.isBooked ? "Заброньовано" : "Вільно"}
-                </span>
-              </div>
-              {!slot.isBooked && (
-                <button
-                  onClick={() => handleDelete(slot.id)}
-                  disabled={busyId === slot.id}
-                  className="text-sm font-semibold text-danger hover:underline disabled:opacity-50"
-                >
-                  Видалити
-                </button>
-              )}
+      <div className="flex flex-col gap-3">
+        {upcomingSlots.map((slot) => (
+          <div
+            key={slot.id}
+            className="flex items-center justify-between gap-3 bg-canvas border border-border rounded-xl p-4"
+          >
+            <div>
+              <p className="font-semibold text-ink">
+                {formatSlot(slot.startTime)} – {formatSlot(slot.endTime).split(", ").pop()}
+              </p>
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded-lg ${
+                  slot.isBooked
+                    ? "bg-primary-soft text-primary"
+                    : "bg-accent-soft text-accent"
+                }`}
+              >
+                {slot.isBooked ? "Заброньовано" : "Вільно"}
+              </span>
             </div>
-          ))}
-        </div>
+            {!slot.isBooked && (
+              <button
+                onClick={() => handleDelete(slot.id)}
+                disabled={busyId === slot.id}
+                className="text-sm font-semibold text-danger hover:underline disabled:opacity-50"
+              >
+                Видалити
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-export default AvailabilityPage;
+export default AvailabilityManager;

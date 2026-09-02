@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import StreakCard from "../../components/dashboard/StreakCard";
+import AvailabilityManager from "../../components/dashboard/AvailabilityManager";
 
 const STATUS_LABELS = {
   CREATED: "Заброньовано",
@@ -168,6 +169,8 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+      {dbUser?.role === "SPECIALIST" && <AvailabilityManager />}
 
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
         <h2 className="text-2xl font-extrabold text-ink mb-4">Кабінет</h2>

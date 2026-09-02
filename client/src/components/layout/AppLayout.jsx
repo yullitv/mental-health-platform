@@ -34,7 +34,6 @@ const AppLayout = () => {
     // власній роботі не потрібне.
     navItems = [
       ...baseNavItems.filter((item) => item.to !== "/specialists"),
-      { to: "/availability", label: "Вільні дати" },
       { to: "/specialist-profile", label: "Профіль і верифікація" },
     ];
   }
