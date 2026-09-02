@@ -18,7 +18,14 @@ const AppLayout = () => {
 
   let navItems = baseNavItems;
   if (dbUser?.role === "ADMIN") {
-    navItems = [...baseNavItems, { to: "/admin", label: "Адмін-панель" }];
+    // "Кабінет" (сесії клієнта/спеціаліста) — не про роль адміна, його
+    // робочий простір це "Адмін-панель". "Спеціалісти" лишаємо — корисно
+    // звірити, як публічний профіль виглядає після підтвердження
+    // (SpecialistDetailPage сама ховає бронювання для адміна).
+    navItems = [
+      ...baseNavItems.filter((item) => item.to !== "/dashboard"),
+      { to: "/admin", label: "Адмін-панель" },
+    ];
   } else if (dbUser?.role === "CLIENT") {
     navItems = [
       ...baseNavItems,

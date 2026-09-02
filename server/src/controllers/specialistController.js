@@ -3,11 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const { getGeminiClient } = require('../utils/geminiClient');
 
-// GET /api/specialists — публічний список підтверджених спеціалістів
+// GET /api/specialists — публічний список підтверджених спеціалістів.
+// Фільтр по user.role — захист від "осиротілого" SpecialistProfile: якщо
+// комусь вручну змінили роль з SPECIALIST на іншу (наприклад, у Prisma
+// Studio), стара анкета не повинна лишатись видимою як публічний спеціаліст.
 exports.getApprovedSpecialists = async (req, res) => {
   try {
     const specialists = await prisma.specialistProfile.findMany({
-      where: { verificationStatus: 'APPROVED' },
+      where: { verificationStatus: 'APPROVED', user: { role: 'SPECIALIST' } },
       include: {
         user: { select: { firstName: true, lastName: true } },
       },
@@ -19,11 +22,13 @@ exports.getApprovedSpecialists = async (req, res) => {
   }
 };
 
-// GET /api/specialists/pending — ADMIN: профілі, що очікують підтвердження
+// GET /api/specialists/pending — ADMIN: профілі, що очікують підтвердження.
+// Той самий захист від "осиротілого" профілю — не показуємо в черзі когось,
+// хто вже не має ролі SPECIALIST.
 exports.getPendingSpecialists = async (req, res) => {
   try {
     const specialists = await prisma.specialistProfile.findMany({
-      where: { verificationStatus: 'PENDING' },
+      where: { verificationStatus: 'PENDING', user: { role: 'SPECIALIST' } },
       include: {
         user: { select: { firstName: true, lastName: true, email: true } },
       },
@@ -144,13 +149,14 @@ exports.getSpecialistById = async (req, res) => {
     const specialist = await prisma.specialistProfile.findUnique({
       where: { id },
       include: {
-        user: { select: { firstName: true, lastName: true } },
+        user: { select: { firstName: true, lastName: true, role: true } },
       },
     });
 
-    if (!specialist) {
+    if (!specialist || specialist.user.role !== 'SPECIALIST') {
       return res.status(404).json({ message: 'Спеціаліста не знайдено' });
     }
+    delete specialist.user.role;
 
     res.status(200).json(specialist);
   } catch (error) {
