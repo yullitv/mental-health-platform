@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { useCurrentUser } from "../../context/CurrentUserContext";
 
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
@@ -13,6 +14,8 @@ const CONCERN_LABELS = {
 };
 
 const SpecialistsPage = () => {
+  const { dbUser } = useCurrentUser();
+  const isAdmin = dbUser?.role === "ADMIN";
   const [specialists, setSpecialists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -39,7 +42,9 @@ const SpecialistsPage = () => {
     <div className="max-w-4xl mx-auto text-left">
       <h2 className="text-2xl font-extrabold text-ink mb-2">Спеціалісти</h2>
       <p className="text-muted mb-6">
-        Обери спеціаліста, який тобі підходить, і забронюй зручний час.
+        {isAdmin
+          ? "Перегляд підтверджених спеціалістів (без можливості бронювання)."
+          : "Обери спеціаліста, який тобі підходить, і забронюй зручний час."}
       </p>
 
       {isLoading && <p className="text-muted">Завантаження...</p>}
