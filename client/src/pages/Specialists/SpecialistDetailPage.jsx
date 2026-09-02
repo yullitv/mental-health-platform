@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { useCurrentUser } from "../../context/CurrentUserContext";
 
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
@@ -25,6 +26,8 @@ const SpecialistDetailPage = () => {
   const { id } = useParams();
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const { dbUser } = useCurrentUser();
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const [specialist, setSpecialist] = useState(null);
   const [slots, setSlots] = useState([]);
@@ -135,23 +138,38 @@ const SpecialistDetailPage = () => {
       )}
 
       <h3 className="font-bold text-ink mb-2">Вільні слоти</h3>
+      {isAdmin && (
+        <p className="text-muted text-sm mb-2">
+          Перегляд адміністратора: бронювання недоступне для цієї ролі.
+        </p>
+      )}
       {slots.length === 0 && (
         <p className="text-muted">Наразі немає вільних слотів.</p>
       )}
       <div className="flex flex-col gap-2">
-        {slots.map((slot) => (
-          <button
-            key={slot.id}
-            onClick={() => handleBook(slot.id)}
-            disabled={bookingSlotId === slot.id}
-            className="flex justify-between items-center bg-canvas border border-border rounded-xl px-4 py-3 hover:border-primary transition disabled:opacity-50"
-          >
-            <span className="text-ink font-semibold">{formatSlot(slot.startTime)}</span>
-            <span className="text-primary text-sm font-semibold">
-              {bookingSlotId === slot.id ? "Бронюємо..." : "Забронювати"}
-            </span>
-          </button>
-        ))}
+        {slots.map((slot) =>
+          isAdmin ? (
+            <div
+              key={slot.id}
+              className="flex justify-between items-center bg-canvas border border-border rounded-xl px-4 py-3 opacity-70"
+            >
+              <span className="text-ink font-semibold">{formatSlot(slot.startTime)}</span>
+              <span className="text-muted text-sm">Вільно</span>
+            </div>
+          ) : (
+            <button
+              key={slot.id}
+              onClick={() => handleBook(slot.id)}
+              disabled={bookingSlotId === slot.id}
+              className="flex justify-between items-center bg-canvas border border-border rounded-xl px-4 py-3 hover:border-primary transition disabled:opacity-50"
+            >
+              <span className="text-ink font-semibold">{formatSlot(slot.startTime)}</span>
+              <span className="text-primary text-sm font-semibold">
+                {bookingSlotId === slot.id ? "Бронюємо..." : "Забронювати"}
+              </span>
+            </button>
+          )
+        )}
       </div>
 
       {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
