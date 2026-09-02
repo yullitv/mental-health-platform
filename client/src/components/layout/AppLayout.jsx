@@ -3,8 +3,10 @@ import Header from "./Header";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { useNotifications } from "../../context/NotificationContext";
 
+// "Головна" сюди свідомо не входить: залогінений користувач з "/" одразу
+// редіректиться на "/dashboard" (див. HomePage.jsx), тож пункт навігації
+// туди був би просто дублем "Кабінету".
 const baseNavItems = [
-  { to: "/", label: "Головна" },
   { to: "/dashboard", label: "Кабінет" },
   { to: "/specialists", label: "Спеціалісти" },
   { to: "/notifications", label: "Сповіщення" },
