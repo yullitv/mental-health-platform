@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { API_BASE_URL } from "../../api/config";
+import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
 
 const AdminPage = () => {
   const { getToken } = useAuth();
@@ -75,10 +76,25 @@ const AdminPage = () => {
           >
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
-                <p className="font-semibold text-ink">
-                  {specialist.user?.firstName} {specialist.user?.lastName}
-                </p>
-                <p className="text-sm text-muted">{specialist.user?.email}</p>
+                <div className="flex items-center gap-3">
+                  {specialist.photoUrl ? (
+                    <img
+                      src={`${SERVER_ORIGIN}${specialist.photoUrl}`}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover border border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-canvas border border-border flex items-center justify-center text-base text-muted shrink-0">
+                      👤
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-ink">
+                      {specialist.user?.firstName} {specialist.user?.lastName}
+                    </p>
+                    <p className="text-sm text-muted">{specialist.user?.email}</p>
+                  </div>
+                </div>
                 {specialist.bio && (
                   <p className="text-sm text-ink mt-2">{specialist.bio}</p>
                 )}
@@ -99,12 +115,45 @@ const AdminPage = () => {
                     Рекомендований донат: {specialist.hourlyRate} грн
                   </p>
                 )}
+
+                {(specialist.fullLegalName ||
+                  specialist.licenseNumber ||
+                  specialist.issuingInstitution ||
+                  specialist.graduationYear) && (
+                  <div className="text-sm text-ink mt-2 bg-canvas border border-border rounded-lg p-3 space-y-1">
+                    {specialist.fullLegalName && (
+                      <p>
+                        <span className="text-muted">ПІБ у документі:</span>{" "}
+                        {specialist.fullLegalName}
+                      </p>
+                    )}
+                    {specialist.licenseNumber && (
+                      <p>
+                        <span className="text-muted">Номер документа:</span>{" "}
+                        {specialist.licenseNumber}
+                      </p>
+                    )}
+                    {specialist.issuingInstitution && (
+                      <p>
+                        <span className="text-muted">Заклад:</span>{" "}
+                        {specialist.issuingInstitution}
+                      </p>
+                    )}
+                    {specialist.graduationYear && (
+                      <p>
+                        <span className="text-muted">Рік видачі:</span>{" "}
+                        {specialist.graduationYear}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {specialist.documentsUrl?.length > 0 && (
                   <div className="flex flex-col gap-1 mt-2">
                     {specialist.documentsUrl.map((url, i) => (
                       <a
                         key={url}
-                        href={url}
+                        href={url.startsWith("http") ? url : `${SERVER_ORIGIN}${url}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm font-semibold text-primary hover:underline"
@@ -112,6 +161,23 @@ const AdminPage = () => {
                         Документ {i + 1}
                       </a>
                     ))}
+                  </div>
+                )}
+
+                {specialist.aiScreeningStatus && (
+                  <div className="mt-2 bg-accent-soft border border-border rounded-lg p-3">
+                    <p className="text-sm font-semibold text-ink">
+                      {AI_STATUS_LABELS[specialist.aiScreeningStatus] ||
+                        "AI переглянув документ"}
+                    </p>
+                    {specialist.aiScreeningNotes && (
+                      <p className="text-sm text-muted mt-1">
+                        {specialist.aiScreeningNotes}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted mt-2">
+                      Попередня AI-підказка, не остаточне рішення — рішення приймаєш ти.
+                    </p>
                   </div>
                 )}
               </div>

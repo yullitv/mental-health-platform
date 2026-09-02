@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import { API_BASE_URL } from "../../api/config";
+import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
@@ -93,13 +93,33 @@ const SpecialistDetailPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-      <h2 className="text-2xl font-extrabold text-ink mb-1">
-        {specialist.user?.firstName} {specialist.user?.lastName}
-      </h2>
-      {specialist.hourlyRate && (
-        <p className="text-muted mb-4">{specialist.hourlyRate} грн / сесія</p>
-      )}
+      <div className="flex items-center gap-4 mb-4">
+        {specialist.photoUrl ? (
+          <img
+            src={`${SERVER_ORIGIN}${specialist.photoUrl}`}
+            alt=""
+            className="w-16 h-16 rounded-full object-cover border border-border shrink-0"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-canvas border border-border flex items-center justify-center text-2xl text-muted shrink-0">
+            👤
+          </div>
+        )}
+        <div>
+          <h2 className="text-2xl font-extrabold text-ink">
+            {specialist.user?.firstName} {specialist.user?.lastName}
+          </h2>
+          {specialist.hourlyRate && (
+            <p className="text-muted">{specialist.hourlyRate} грн / сесія</p>
+          )}
+        </div>
+      </div>
       {specialist.bio && <p className="text-ink mb-4">{specialist.bio}</p>}
+      {specialist.experience && (
+        <p className="text-ink mb-4">
+          <span className="font-semibold">Досвід роботи:</span> {specialist.experience}
+        </p>
+      )}
 
       {specialist.specializations?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-6">

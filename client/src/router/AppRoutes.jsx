@@ -10,6 +10,7 @@ import DiaryPage from "../pages/Diary/DiaryPage";
 import ChatPage from "../pages/Chat/ChatPage";
 import NotificationsPage from "../pages/Notifications/NotificationsPage";
 import AdminPage from "../pages/Admin/AdminPage";
+import SpecialistProfileEditPage from "../pages/SpecialistProfile/SpecialistProfileEditPage";
 import DonationPage from "../pages/Donation/DonationPage";
 import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import ReviewPage from "../pages/Review/ReviewPage";
@@ -36,6 +37,10 @@ const AppRoutes = () => {
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allow={["SPECIALIST"]} />}>
+            <Route path="/specialist-profile" element={<SpecialistProfileEditPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={["CLIENT"]} />}>
