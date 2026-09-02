@@ -29,6 +29,11 @@ const AppLayout = () => {
       { to: "/privacy", label: "Приватність" },
       { to: "/onboarding", label: "Анкета" },
     ];
+  } else if (dbUser?.role === "SPECIALIST") {
+    navItems = [
+      ...baseNavItems,
+      { to: "/specialist-profile", label: "Мій профіль" },
+    ];
   }
 
   return (
