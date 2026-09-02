@@ -86,6 +86,15 @@ model SpecialistProfile {
   verificationStatus VerificationStatus @default(PENDING)
   documentsUrl       String[]           // Посилання на дипломи/сертифікати
 
+  fullLegalName      String?            // ПІБ як зазначено в документі про освіту
+  licenseNumber      String?            // Номер диплома/сертифіката/ліцензії
+  issuingInstitution String?            // Заклад, що видав документ
+  graduationYear     Int?               // Рік випуску/видачі документа
+
+  aiScreeningStatus  String?            // "MATCH" | "MISMATCH" | "UNREADABLE" | "NOT_RELEVANT"
+  aiScreeningNotes   String?            @db.Text
+  aiScreenedAt       DateTime?
+
   sessions           Session[]          @relation("SpecialistSessions")
 
   // НОВЕ
