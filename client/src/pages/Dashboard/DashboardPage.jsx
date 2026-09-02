@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
@@ -34,7 +34,9 @@ const DashboardPage = () => {
   const [busyId, setBusyId] = useState(null);
 
   const loadData = useCallback(async () => {
-    if (!dbUser) return;
+    // Адмін не має власних сесій/донатів як клієнт чи спеціаліст — і не
+    // має доступу до /sessions/mine на бекенді, тож навіть не питаємо.
+    if (!dbUser || dbUser.role === "ADMIN") return;
     try {
       const token = await getToken();
       const sessionsRes = await fetch(`${API_BASE_URL}/sessions/mine`, {
@@ -110,6 +112,10 @@ const DashboardPage = () => {
       setBusyId(null);
     }
   };
+
+  if (dbUser?.role === "ADMIN") {
+    return <Navigate to="/admin" replace />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto text-left space-y-6">
