@@ -3,9 +3,19 @@ const router = express.Router();
 const specialistController = require('../controllers/specialistController');
 const requireRole = require('../middlewares/roleMiddleware');
 const uploadSpecialistDocs = require('../middlewares/uploadSpecialistDocs');
+const uploadSpecialistPhoto = require('../middlewares/uploadSpecialistPhoto');
 
 const handleUpload = (req, res, next) => {
   uploadSpecialistDocs.array('documents', 3)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Помилка завантаження файлу' });
+    }
+    next();
+  });
+};
+
+const handlePhotoUpload = (req, res, next) => {
+  uploadSpecialistPhoto.single('photo')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ message: err.message || 'Помилка завантаження файлу' });
     }
@@ -18,6 +28,7 @@ router.get('/pending', requireRole('ADMIN'), specialistController.getPendingSpec
 router.get('/me', requireRole('SPECIALIST'), specialistController.getMyProfile);
 router.put('/me', requireRole('SPECIALIST'), specialistController.updateMyProfile);
 router.post('/me/documents', requireRole('SPECIALIST'), handleUpload, specialistController.uploadDocuments);
+router.post('/me/photo', requireRole('SPECIALIST'), handlePhotoUpload, specialistController.uploadPhoto);
 router.put('/:id/verify', requireRole('ADMIN'), specialistController.verifySpecialist);
 router.get('/:id', specialistController.getSpecialistById);
 

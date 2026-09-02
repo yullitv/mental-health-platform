@@ -35,6 +35,28 @@ exports.getPendingSpecialists = async (req, res) => {
   }
 };
 
+// Ці поля — саме те, що адмін перевіряв, коли підтверджував заявку. Якщо
+// підтверджений спеціаліст їх міняє, старе підтвердження вже не відповідає
+// дійсності — повертаємо заявку на повторний розгляд, а не залишаємо
+// "Підтверджено" на публічній картці для когось, кого адмін ще не бачив.
+function verificationDataChanged(profile, fields) {
+  const normalizedGraduationYear =
+    fields.graduationYear !== undefined
+      ? fields.graduationYear
+        ? Number(fields.graduationYear)
+        : null
+      : undefined;
+
+  return (
+    (fields.fullLegalName !== undefined && fields.fullLegalName !== profile.fullLegalName) ||
+    (fields.licenseNumber !== undefined && fields.licenseNumber !== profile.licenseNumber) ||
+    (fields.issuingInstitution !== undefined &&
+      fields.issuingInstitution !== profile.issuingInstitution) ||
+    (normalizedGraduationYear !== undefined &&
+      normalizedGraduationYear !== profile.graduationYear)
+  );
+}
+
 // PUT /api/specialists/me — спеціаліст редагує власний профіль
 exports.updateMyProfile = async (req, res) => {
   try {
@@ -43,6 +65,7 @@ exports.updateMyProfile = async (req, res) => {
       specializations,
       hourlyRate,
       documentsUrl,
+      experience,
       fullLegalName,
       licenseNumber,
       issuingInstitution,
@@ -56,23 +79,36 @@ exports.updateMyProfile = async (req, res) => {
       return res.status(404).json({ message: 'Профіль спеціаліста не знайдено' });
     }
 
+    const resetToPending =
+      profile.verificationStatus === 'APPROVED' &&
+      verificationDataChanged(profile, {
+        fullLegalName,
+        licenseNumber,
+        issuingInstitution,
+        graduationYear,
+      });
+
     const updated = await prisma.specialistProfile.update({
       where: { userId: req.dbUser.id },
       data: {
         ...(bio !== undefined && { bio }),
         ...(specializations !== undefined && { specializations }),
-        ...(hourlyRate !== undefined && { hourlyRate: Number(hourlyRate) }),
+        ...(hourlyRate !== undefined && {
+          hourlyRate: hourlyRate === null || hourlyRate === '' ? null : Number(hourlyRate),
+        }),
         ...(documentsUrl !== undefined && { documentsUrl }),
+        ...(experience !== undefined && { experience }),
         ...(fullLegalName !== undefined && { fullLegalName }),
         ...(licenseNumber !== undefined && { licenseNumber }),
         ...(issuingInstitution !== undefined && { issuingInstitution }),
         ...(graduationYear !== undefined && {
           graduationYear: graduationYear ? Number(graduationYear) : null,
         }),
+        ...(resetToPending && { verificationStatus: 'PENDING' }),
       },
     });
 
-    res.status(200).json(updated);
+    res.status(200).json({ ...updated, verificationResetToPending: resetToPending });
   } catch (error) {
     console.error('❌ Помилка оновлення профілю:', error);
     res.status(500).json({ message: 'Помилка сервера' });
@@ -249,17 +285,49 @@ exports.uploadDocuments = async (req, res) => {
       console.error('⚠️ AI-скринінг документа не вдався (заявку все одно подаємо):', aiError);
     }
 
+    const resetToPending = profile.verificationStatus === 'APPROVED';
+
     const updated = await prisma.specialistProfile.update({
       where: { userId: req.dbUser.id },
       data: {
         documentsUrl,
         ...(aiScreeningStatus && { aiScreeningStatus, aiScreeningNotes, aiScreenedAt }),
+        ...(resetToPending && { verificationStatus: 'PENDING' }),
       },
+    });
+
+    res.status(200).json({ ...updated, verificationResetToPending: resetToPending });
+  } catch (error) {
+    console.error('❌ Помилка завантаження документів:', error);
+    res.status(500).json({ message: 'Помилка сервера' });
+  }
+};
+
+// POST /api/specialists/me/photo — фото профілю, показується клієнтам публічно.
+// Це НЕ документ верифікації, тому статус підтвердження не чіпаємо.
+exports.uploadPhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Потрібен файл фото' });
+    }
+
+    const profile = await prisma.specialistProfile.findUnique({
+      where: { userId: req.dbUser.id },
+    });
+    if (!profile) {
+      return res.status(404).json({ message: 'Профіль спеціаліста не знайдено' });
+    }
+
+    const photoUrl = `/uploads/specialist-photos/${req.file.filename}`;
+
+    const updated = await prisma.specialistProfile.update({
+      where: { userId: req.dbUser.id },
+      data: { photoUrl },
     });
 
     res.status(200).json(updated);
   } catch (error) {
-    console.error('❌ Помилка завантаження документів:', error);
+    console.error('❌ Помилка завантаження фото:', error);
     res.status(500).json({ message: 'Помилка сервера' });
   }
 };
