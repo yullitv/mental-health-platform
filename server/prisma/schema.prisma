@@ -95,6 +95,9 @@ model SpecialistProfile {
   aiScreeningNotes   String?            @db.Text
   aiScreenedAt       DateTime?
 
+  photoUrl           String?            // Фото профілю, показується клієнтам публічно
+  experience         String?            @db.Text // Досвід роботи — вільний текст (роки/опис)
+
   sessions           Session[]          @relation("SpecialistSessions")
 
   // НОВЕ

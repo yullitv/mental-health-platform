@@ -30,9 +30,12 @@ const AppLayout = () => {
       { to: "/onboarding", label: "Анкета" },
     ];
   } else if (dbUser?.role === "SPECIALIST") {
+    // "Спеціалісти" — це бронювання ІНШИХ спеціалістів, спеціалісту в його
+    // власній роботі не потрібне.
     navItems = [
-      ...baseNavItems,
-      { to: "/specialist-profile", label: "Мій профіль" },
+      ...baseNavItems.filter((item) => item.to !== "/specialists"),
+      { to: "/availability", label: "Вільні дати" },
+      { to: "/specialist-profile", label: "Профіль і верифікація" },
     ];
   }
 

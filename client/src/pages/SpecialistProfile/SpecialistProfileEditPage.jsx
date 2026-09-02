@@ -17,11 +17,13 @@ const SpecialistProfileEditPage = () => {
   const [notice, setNotice] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const [form, setForm] = useState({
     bio: "",
     specializations: "",
     hourlyRate: "",
+    experience: "",
     fullLegalName: "",
     licenseNumber: "",
     issuingInstitution: "",
@@ -41,6 +43,7 @@ const SpecialistProfileEditPage = () => {
         bio: data.bio || "",
         specializations: (data.specializations || []).join(", "),
         hourlyRate: data.hourlyRate ?? "",
+        experience: data.experience || "",
         fullLegalName: data.fullLegalName || "",
         licenseNumber: data.licenseNumber || "",
         issuingInstitution: data.issuingInstitution || "",
@@ -81,6 +84,7 @@ const SpecialistProfileEditPage = () => {
             .map((s) => s.trim())
             .filter(Boolean),
           hourlyRate: form.hourlyRate === "" ? null : Number(form.hourlyRate),
+          experience: form.experience,
           fullLegalName: form.fullLegalName,
           licenseNumber: form.licenseNumber,
           issuingInstitution: form.issuingInstitution,
@@ -91,7 +95,11 @@ const SpecialistProfileEditPage = () => {
       if (!response.ok) throw new Error("Не вдалось зберегти профіль");
       const data = await response.json();
       setProfile(data);
-      setNotice("Профіль збережено.");
+      setNotice(
+        data.verificationResetToPending
+          ? "Профіль збережено. Ти змінила дані верифікації — заявку повернуто на повторний розгляд адміністратором."
+          : "Профіль збережено.",
+      );
     } catch (err) {
       console.error("❌ Помилка збереження профілю:", err);
       setError(err.message);
@@ -124,13 +132,48 @@ const SpecialistProfileEditPage = () => {
       const data = await response.json();
       setProfile(data);
       setNotice(
-        "Документи завантажено. AI переглянув їх попередньо — остаточне рішення залишається за адміністратором.",
+        data.verificationResetToPending
+          ? "Документи завантажено. AI переглянув їх попередньо, а заявку повернуто на повторний розгляд адміністратором."
+          : "Документи завантажено. AI переглянув їх попередньо — остаточне рішення залишається за адміністратором.",
       );
     } catch (err) {
       console.error("❌ Помилка завантаження документів:", err);
       setError(err.message);
     } finally {
       setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleUploadPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingPhoto(true);
+    setError("");
+    setNotice("");
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const response = await fetch(`${API_BASE_URL}/specialists/me/photo`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Не вдалось завантажити фото");
+      }
+      const data = await response.json();
+      setProfile(data);
+      setNotice("Фото оновлено.");
+    } catch (err) {
+      console.error("❌ Помилка завантаження фото:", err);
+      setError(err.message);
+    } finally {
+      setIsUploadingPhoto(false);
       e.target.value = "";
     }
   };
@@ -169,6 +212,36 @@ const SpecialistProfileEditPage = () => {
         <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
       )}
 
+      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 space-y-4">
+        <h3 className="text-base font-extrabold text-ink">Фото профілю</h3>
+        <p className="text-sm text-muted">
+          Показується клієнтам на публічній картці. JPG, PNG або WEBP, до 3 МБ.
+        </p>
+        <div className="flex items-center gap-4">
+          {profile?.photoUrl ? (
+            <img
+              src={`${SERVER_ORIGIN}${profile.photoUrl}`}
+              alt="Фото профілю"
+              className="w-20 h-20 rounded-full object-cover border border-border"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-canvas border border-border flex items-center justify-center text-2xl text-muted">
+              👤
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleUploadPhoto}
+            disabled={isUploadingPhoto}
+            className="text-sm text-muted"
+          />
+        </div>
+        {isUploadingPhoto && (
+          <p className="text-sm text-muted">Завантаження фото...</p>
+        )}
+      </div>
+
       <form
         onSubmit={handleSaveProfile}
         className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 space-y-4"
@@ -188,6 +261,13 @@ const SpecialistProfileEditPage = () => {
           onChange={handleChange("specializations")}
           className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
         />
+        <textarea
+          placeholder="Досвід роботи: скільки років практикуєш, де працювала раніше"
+          value={form.experience}
+          onChange={handleChange("experience")}
+          rows={3}
+          className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
+        />
         <input
           type="number"
           placeholder="Рекомендований донат, грн"
@@ -201,7 +281,8 @@ const SpecialistProfileEditPage = () => {
         </h3>
         <p className="text-xs text-muted -mt-2">
           Заповни точно як у документі про освіту/ліцензії — за цим AI звірятиме
-          завантажений документ.
+          завантажений документ. Якщо ти вже підтверджена і зміниш ці поля,
+          заявка автоматично повернеться на повторний розгляд.
         </p>
         <input
           type="text"

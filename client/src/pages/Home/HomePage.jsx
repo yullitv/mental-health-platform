@@ -1,17 +1,21 @@
-import { SignedOut, SignUpButton } from "@clerk/clerk-react";
-import WelcomeMessage from "../../components/shared/WelcomeMessage";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/clerk-react";
+import { Navigate } from "react-router-dom";
 
 const HomePage = () => {
   return (
     <div className="text-center px-4 pt-8">
-      <h1 className="text-4xl font-extrabold text-ink mb-4 tracking-tight">
-        Опора
-      </h1>
-      <p className="text-muted max-w-md mx-auto">
-        Твій персональний простір для емоційного балансу та підтримки.
-      </p>
+      <SignedIn>
+        <Navigate to="/dashboard" replace />
+      </SignedIn>
 
       <SignedOut>
+        <h1 className="text-4xl font-extrabold text-ink mb-4 tracking-tight">
+          Опора
+        </h1>
+        <p className="text-muted max-w-md mx-auto">
+          Твій персональний простір для емоційного балансу та підтримки.
+        </p>
+
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
           <SignUpButton
             mode="modal"
@@ -31,8 +35,6 @@ const HomePage = () => {
           </SignUpButton>
         </div>
       </SignedOut>
-
-      <WelcomeMessage />
     </div>
   );
 };

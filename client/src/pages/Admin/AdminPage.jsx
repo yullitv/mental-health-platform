@@ -76,10 +76,25 @@ const AdminPage = () => {
           >
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
-                <p className="font-semibold text-ink">
-                  {specialist.user?.firstName} {specialist.user?.lastName}
-                </p>
-                <p className="text-sm text-muted">{specialist.user?.email}</p>
+                <div className="flex items-center gap-3">
+                  {specialist.photoUrl ? (
+                    <img
+                      src={`${SERVER_ORIGIN}${specialist.photoUrl}`}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover border border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-canvas border border-border flex items-center justify-center text-base text-muted shrink-0">
+                      👤
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-ink">
+                      {specialist.user?.firstName} {specialist.user?.lastName}
+                    </p>
+                    <p className="text-sm text-muted">{specialist.user?.email}</p>
+                  </div>
+                </div>
                 {specialist.bio && (
                   <p className="text-sm text-ink mt-2">{specialist.bio}</p>
                 )}

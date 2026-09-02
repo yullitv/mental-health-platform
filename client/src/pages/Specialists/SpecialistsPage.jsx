@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL } from "../../api/config";
+import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
@@ -56,10 +56,26 @@ const SpecialistsPage = () => {
             to={`/specialists/${s.id}`}
             className="block bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-5 hover:border-primary transition"
           >
-            <p className="font-bold text-ink">
-              {s.user?.firstName} {s.user?.lastName}
-            </p>
-            {s.bio && <p className="text-muted text-sm mt-1 line-clamp-3">{s.bio}</p>}
+            <div className="flex items-center gap-3">
+              {s.photoUrl ? (
+                <img
+                  src={`${SERVER_ORIGIN}${s.photoUrl}`}
+                  alt=""
+                  className="w-12 h-12 rounded-full object-cover border border-border shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center text-lg text-muted shrink-0">
+                  👤
+                </div>
+              )}
+              <p className="font-bold text-ink">
+                {s.user?.firstName} {s.user?.lastName}
+              </p>
+            </div>
+            {s.bio && <p className="text-muted text-sm mt-3 line-clamp-3">{s.bio}</p>}
+            {s.experience && (
+              <p className="text-muted text-sm mt-1 line-clamp-2">{s.experience}</p>
+            )}
             {s.specializations?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {s.specializations.map((spec) => (
