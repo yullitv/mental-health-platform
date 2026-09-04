@@ -1,6 +1,9 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
+import { useTheme } from "../../context/ThemeContext";
 
 const Header = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="p-4 w-full flex justify-between items-center bg-surface border-b border-border absolute top-0">
       <div className="flex items-center gap-2">
@@ -12,7 +15,20 @@ const Header = () => {
         </svg>
         <span className="font-extrabold text-xl text-ink tracking-tight">Опора</span>
       </div>
-      <div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={
+            theme === "dark" ? "Увімкнути світлу тему" : "Увімкнути темну тему"
+          }
+          title={
+            theme === "dark" ? "Увімкнути світлу тему" : "Увімкнути темну тему"
+          }
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-border bg-canvas text-ink hover:bg-primary-soft hover:text-primary transition"
+        >
+          {theme === "dark" ? "☀️" : "🌙"}
+        </button>
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
         </SignedIn>

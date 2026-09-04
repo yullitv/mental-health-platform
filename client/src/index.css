@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
+/* Клас .dark на <html> вмикає темну тему (див. context/ThemeContext.jsx). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Manrope", system-ui, "Segoe UI", sans-serif;
 
@@ -18,6 +21,26 @@
   --color-accent-soft: #fceeda;
 
   --color-danger: #e2574c;
+}
+
+/* Темна палітра: перевизначає ті самі CSS-змінні, тож усі bg-canvas,
+   text-ink, bg-surface тощо (699+ використань по коду) підхоплюють нові
+   значення автоматично — без правок у кожному компоненті. */
+.dark {
+  --color-canvas: #17141f;
+  --color-surface: #1f1b2c;
+  --color-border: #322c46;
+  --color-ink: #f1eefa;
+  --color-muted: #a79fbd;
+
+  --color-primary: #8b7edb;
+  --color-primary-dark: #a397e6;
+  --color-primary-soft: #2c2640;
+
+  --color-accent: #e2a24c;
+  --color-accent-soft: #3a2f1c;
+
+  --color-danger: #ef6a5f;
 }
 
 *,

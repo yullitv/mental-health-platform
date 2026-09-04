@@ -103,6 +103,93 @@ exports.getSessionMessages = async (req, res) => {
   }
 };
 
+// PUT /api/messages/:id — редагувати власне повідомлення
+exports.editMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "content обов'язковий" });
+    }
+
+    const message = await prisma.message.findUnique({ where: { id } });
+
+    if (!message) {
+      return res.status(404).json({ message: "Повідомлення не знайдено" });
+    }
+    if (message.senderId !== req.dbUser.id) {
+      return res
+        .status(403)
+        .json({ message: "Можна редагувати лише власні повідомлення" });
+    }
+    if (message.isDeleted) {
+      return res
+        .status(400)
+        .json({ message: "Видалене повідомлення не можна редагувати" });
+    }
+
+    const updated = await prisma.message.update({
+      where: { id },
+      data: { content: content.trim(), editedAt: new Date() },
+      include: {
+        sender: {
+          select: { id: true, firstName: true, lastName: true, role: true },
+        },
+      },
+    });
+
+    getIo().to(`session:${message.sessionId}`).emit("messageUpdated", updated);
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Помилка при редагуванні повідомлення:", error);
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Помилка сервера" });
+  }
+};
+
+// DELETE /api/messages/:id — видалити власне повідомлення (м'яке видалення)
+exports.deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const message = await prisma.message.findUnique({ where: { id } });
+
+    if (!message) {
+      return res.status(404).json({ message: "Повідомлення не знайдено" });
+    }
+    if (message.senderId !== req.dbUser.id) {
+      return res
+        .status(403)
+        .json({ message: "Можна видаляти лише власні повідомлення" });
+    }
+    if (message.isDeleted) {
+      return res.json(message);
+    }
+
+    const updated = await prisma.message.update({
+      where: { id },
+      data: { content: "", isDeleted: true, editedAt: null },
+      include: {
+        sender: {
+          select: { id: true, firstName: true, lastName: true, role: true },
+        },
+      },
+    });
+
+    getIo().to(`session:${message.sessionId}`).emit("messageDeleted", updated);
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Помилка при видаленні повідомлення:", error);
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Помилка сервера" });
+  }
+};
+
 // PUT /api/messages/:sessionId/read — позначити чужі повідомлення як прочитані
 exports.markAsRead = async (req, res) => {
   try {
