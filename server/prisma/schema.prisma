@@ -138,14 +138,20 @@ model Session {
 
 // НОВЕ: фонд/збір, куди можна задонатити замість оплати сесії
 model Fundraiser {
-  id          String     @id @default(cuid())
-  name        String
-  description String?    @db.Text
-  bankJarUrl  String     // Посилання на банку Monobank/іншого сервісу
-  category    String?    // напр. "оборона", "гуманітарна допомога"
-  logoUrl     String?
-  isVerified  Boolean    @default(false)
-  isActive    Boolean    @default(true)
+  id            String     @id @default(cuid())
+  name          String
+  description   String?    @db.Text
+  bankJarUrl    String     // Посилання на банку Monobank/іншого сервісу
+  category      String?    // напр. "оборона", "гуманітарна допомога"
+  logoUrl       String?
+  isVerified    Boolean    @default(false)
+  isActive      Boolean    @default(true)
+
+  // ID банки в Monobank Open API (не URL, а саме id з /personal/client-info)
+  // — якщо заповнено, донати на цей фонд додатково звіряються з реальною
+  // випискою банки через MONOBANK_JAR_TOKEN. Необов'язкове — не всі фонди
+  // мають таку інтеграцію.
+  monobankJarId String?
 
   sessions    Session[]
   donations   Donation[]
@@ -163,9 +169,33 @@ model Donation {
   fundraiserId  String
   fundraiser    Fundraiser     @relation(fields: [fundraiserId], references: [id])
 
-  amount        Float?         // Сума, заявлена клієнтом (не обов'язково)
-  proofUrl      String         // Скріншот-підтвердження донату
+  amount        Float?         // Сума, заявлена клієнтом (обов'язкова на рівні API — див. createDonation)
+  // Скріншот-підтвердження донату. Опційний: спершу пробуємо підтвердити
+  // донат автоматично через реальну виписку банки (checkBankConfirmation) —
+  // скрін потрібен лише як запасний варіант, коли банк не підтвердив одразу.
+  proofUrl      String?
+  // SHA-256 вмісту файлу — жорсткий захист від повторного використання
+  // того самого скріна для іншого донату (унікальний, але nullable —
+  // щоб не ламати міграцію на існуючих рядках без хешу).
+  proofHash     String?        @unique
   status        DonationStatus @default(PENDING)
+
+  // AI-підказка (НЕ рішення) для того, хто підтверджує: що вдалось
+  // розпізнати на скріні, і чи є розбіжності з заявленими даними.
+  extractedAmount    Float?      // Сума, яку AI прочитав зі скріна
+  extractedReference String?     // Номер транзакції/квитанції, якщо розпізнано
+  extractedRecipient String?     // Одержувач/назва банки, яку AI прочитав зі скріна
+  aiScreeningStatus  String?     // "OK" | "RECIPIENT_MISMATCH" | "AMOUNT_MISMATCH" | "DUPLICATE_REFERENCE" | "UNREADABLE" | "SUSPICIOUS"
+  aiScreeningNotes   String?     @db.Text
+  aiScreenedAt       DateTime?
+
+  // Незалежна від AI перевірка: чи знайшовся в реальній виписці банки
+  // (Monobank API) переказ, що збігається за сумою — набагато надійніший
+  // сигнал за читання скріна, доступний лише коли Fundraiser.monobankJarId
+  // заповнено. bankTransactionId унікальний — щоб той самий реальний
+  // переказ не підтвердив два різні донати.
+  bankConfirmed     Boolean    @default(false)
+  bankTransactionId String?    @unique
 
   // Навмисно НЕ зовнішній ключ (щоб не ускладнювати каскади) —
   // просто userId того, хто підтвердив (спеціаліст або адмін)
@@ -174,6 +204,8 @@ model Donation {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([extractedReference])
 }
 
 // НОВЕ: часові слоти, які відкриває спеціаліст для запису

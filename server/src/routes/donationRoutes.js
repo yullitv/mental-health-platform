@@ -14,6 +14,7 @@ const handleUpload = (req, res, next) => {
 };
 
 router.post('/', requireRole('CLIENT'), handleUpload, donationController.createDonation);
+router.put('/:id/proof', requireRole('CLIENT'), handleUpload, donationController.attachDonationProof);
 router.get('/pending', requireRole('SPECIALIST', 'ADMIN'), donationController.getPendingDonations);
 router.put('/:id/confirm', requireRole('SPECIALIST', 'ADMIN'), donationController.confirmDonation);
 router.put('/:id/reject', requireRole('SPECIALIST', 'ADMIN'), donationController.rejectDonation);
