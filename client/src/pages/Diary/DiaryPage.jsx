@@ -104,7 +104,7 @@ function generateInsights(entries) {
       key: `pair-${a}-${b}`,
       strength: Math.abs(r),
       icon: r > 0 ? "🔗" : "↔️",
-      text: `${cap(METRIC_LABELS[a])} і ${METRIC_LABELS[b]} ${direction} (кореляція ${r.toFixed(2)}).`,
+      text: `${cap(METRIC_LABELS[a])} і ${METRIC_LABELS[b]} ${direction}.`,
     });
   }
 
@@ -467,7 +467,7 @@ const KeyBackupBanner = ({ encryptionKey, onDismiss }) => {
         іншому пристрої чи в іншому браузері. Збережи його в надійному місці
         (наприклад, менеджер паролів).
       </p>
-      <div className="bg-white border border-border rounded-xl p-3 font-mono text-xs break-all">
+      <div className="bg-canvas border border-border rounded-xl p-3 font-mono text-xs break-all">
         {encryptionKey}
       </div>
       <div className="flex gap-3">

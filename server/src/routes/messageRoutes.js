@@ -5,6 +5,8 @@ const requireRole = require('../middlewares/roleMiddleware');
 
 router.post('/', requireRole('CLIENT', 'SPECIALIST'), messageController.sendMessage);
 router.get('/:sessionId', requireRole('CLIENT', 'SPECIALIST'), messageController.getSessionMessages);
+router.put('/:id', requireRole('CLIENT', 'SPECIALIST'), messageController.editMessage);
+router.delete('/:id', requireRole('CLIENT', 'SPECIALIST'), messageController.deleteMessage);
 router.put('/:sessionId/read', requireRole('CLIENT', 'SPECIALIST'), messageController.markAsRead);
 
 module.exports = router;

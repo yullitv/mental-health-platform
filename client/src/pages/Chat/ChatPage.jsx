@@ -23,6 +23,9 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const bottomRef = useRef(null);
 
   const loadMessages = useCallback(async () => {
@@ -60,11 +63,25 @@ const ChatPage = () => {
       setMessages((prev) => [...prev, message]);
     };
 
+    const handleMessageUpdated = (message) => {
+      if (message.sessionId !== sessionId) return;
+      setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)));
+    };
+
+    const handleMessageDeleted = (message) => {
+      if (message.sessionId !== sessionId) return;
+      setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)));
+    };
+
     socket.on("newMessage", handleNewMessage);
+    socket.on("messageUpdated", handleMessageUpdated);
+    socket.on("messageDeleted", handleMessageDeleted);
 
     return () => {
       socket.emit("leaveSession", sessionId);
       socket.off("newMessage", handleNewMessage);
+      socket.off("messageUpdated", handleMessageUpdated);
+      socket.off("messageDeleted", handleMessageDeleted);
     };
   }, [socket, sessionId]);
 
@@ -100,6 +117,62 @@ const ChatPage = () => {
     }
   };
 
+  const startEditing = (msg) => {
+    setConfirmDeleteId(null);
+    setEditingId(msg.id);
+    setEditText(msg.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+
+  const handleSaveEdit = async (id) => {
+    if (!editText.trim()) return;
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/messages/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: editText.trim() }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Не вдалось зберегти зміни");
+      }
+      const updated = await response.json();
+      setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+      cancelEditing();
+    } catch (err) {
+      console.error("❌ Помилка редагування:", err);
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/messages/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Не вдалось видалити повідомлення");
+      }
+      const updated = await response.json();
+      setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+      setConfirmDeleteId(null);
+    } catch (err) {
+      console.error("❌ Помилка видалення:", err);
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 flex flex-col h-[70vh]">
       <h2 className="text-2xl font-extrabold text-ink mb-4">Чат</h2>
@@ -113,28 +186,119 @@ const ChatPage = () => {
         )}
         {messages.map((msg) => {
           const isMine = msg.senderId === dbUser?.id;
+          const isEditing = editingId === msg.id;
           return (
             <div
               key={msg.id}
-              className={`max-w-[75%] rounded-xl px-4 py-2 ${
+              className={`group max-w-[75%] rounded-xl px-4 py-2 ${
                 isMine
                   ? "bg-primary text-white self-end"
                   : "bg-canvas border border-border text-ink self-start"
               }`}
             >
-              {!isMine && (
+              {!isMine && !msg.isDeleted && (
                 <p className="text-xs font-semibold opacity-70 mb-1">
                   {msg.sender?.firstName} {msg.sender?.lastName}
                 </p>
               )}
-              <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-              <p
-                className={`text-[10px] mt-1 ${
-                  isMine ? "text-white/70" : "text-muted"
-                }`}
-              >
-                {formatTime(msg.createdAt)}
-              </p>
+
+              {msg.isDeleted ? (
+                <p
+                  className={`italic whitespace-pre-wrap break-words ${
+                    isMine ? "text-white/70" : "text-muted"
+                  }`}
+                >
+                  Повідомлення видалено
+                </p>
+              ) : isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg px-2 py-1 text-sm text-ink bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      className={`text-xs font-semibold px-2 py-1 rounded-lg ${
+                        isMine ? "text-white/80 hover:bg-white/10" : "text-muted hover:bg-border"
+                      }`}
+                    >
+                      Скасувати
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveEdit(msg.id)}
+                      disabled={!editText.trim()}
+                      className={`text-xs font-semibold px-2 py-1 rounded-lg disabled:opacity-50 ${
+                        isMine
+                          ? "bg-white/20 text-white hover:bg-white/30"
+                          : "bg-primary text-white hover:bg-primary-dark"
+                      }`}
+                    >
+                      Зберегти
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+              )}
+
+              <div className="flex items-center gap-2 mt-1">
+                <p
+                  className={`text-[10px] ${
+                    isMine ? "text-white/70" : "text-muted"
+                  }`}
+                >
+                  {formatTime(msg.createdAt)}
+                  {msg.editedAt && !msg.isDeleted ? " · змінено" : ""}
+                </p>
+
+                {isMine && !msg.isDeleted && !isEditing && (
+                  <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      type="button"
+                      onClick={() => startEditing(msg)}
+                      title="Редагувати"
+                      className="text-[11px] px-1.5 py-0.5 rounded hover:bg-white/20"
+                    >
+                      ✏️
+                    </button>
+                    {confirmDeleteId === msg.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(msg.id)}
+                          title="Так, видалити"
+                          className="text-[11px] px-1.5 py-0.5 rounded bg-danger/80 hover:bg-danger"
+                        >
+                          Видалити
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(null)}
+                          title="Скасувати"
+                          className="text-[11px] px-1.5 py-0.5 rounded hover:bg-white/20"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(msg.id)}
+                        title="Видалити"
+                        className="text-[11px] px-1.5 py-0.5 rounded hover:bg-white/20"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

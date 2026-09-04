@@ -235,6 +235,9 @@ model Message {
   content   String   @db.Text
   isRead    Boolean  @default(false)
 
+  editedAt  DateTime?
+  isDeleted Boolean  @default(false)
+
   createdAt DateTime @default(now())
 }
 
