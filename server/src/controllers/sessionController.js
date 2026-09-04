@@ -109,6 +109,39 @@ exports.getMySessions = async (req, res) => {
   }
 };
 
+// GET /api/sessions/:id — деталі однієї сесії (наприклад, для сторінки
+// відео-дзвінка) — доступно лише клієнту й спеціалісту саме цієї сесії
+exports.getSessionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const session = await prisma.session.findUnique({
+      where: { id },
+      include: {
+        client: { select: { firstName: true, lastName: true } },
+        specialist: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
+      },
+    });
+
+    if (!session) {
+      return res.status(404).json({ message: "Сесію не знайдено" });
+    }
+
+    const isClient = session.clientId === req.dbUser.id;
+    const isSpecialist = session.specialist.userId === req.dbUser.id;
+    if (!isClient && !isSpecialist) {
+      return res.status(403).json({ message: "Це не ваша сесія" });
+    }
+
+    res.status(200).json(session);
+  } catch (error) {
+    console.error("❌ Помилка отримання сесії:", error);
+    res.status(500).json({ message: "Помилка сервера" });
+  }
+};
+
 // PUT /api/sessions/:id/complete — спеціаліст позначає сесію завершеною
 exports.completeSession = async (req, res) => {
   try {

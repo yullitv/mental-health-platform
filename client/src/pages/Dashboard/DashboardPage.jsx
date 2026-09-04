@@ -15,6 +15,20 @@ const STATUS_LABELS = {
   CANCELLED: "Скасовано",
 };
 
+// Той самий вікно доступу, що й на сторінці відео-сесії
+// (VideoSessionPage.jsx) — щоб кнопка на дашборді з'являлась саме тоді,
+// коли перехід на відео справді спрацює.
+const JOIN_WINDOW_BEFORE_MS = 15 * 60 * 1000;
+const JOIN_WINDOW_AFTER_MS = 15 * 60 * 1000;
+
+const canJoinVideo = (session) => {
+  if (session.status !== "CONFIRMED") return false;
+  const now = Date.now();
+  const startMs = new Date(session.startTime).getTime();
+  const endMs = new Date(session.endTime).getTime();
+  return startMs - JOIN_WINDOW_BEFORE_MS <= now && now <= endMs + JOIN_WINDOW_AFTER_MS;
+};
+
 const formatDate = (iso) =>
   new Date(iso).toLocaleString("uk-UA", {
     day: "2-digit",
@@ -33,6 +47,15 @@ const DashboardPage = () => {
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [, setClockTick] = useState(0);
+
+  // Раз на хвилину форсуємо перерендер, щоб кнопка "Приєднатися до відео"
+  // з'являлась/зникала близько до реального часу, а не тільки після
+  // наступного ручного оновлення сторінки.
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick((t) => t + 1), 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadData = useCallback(async () => {
     // Адмін не має власних сесій/донатів як клієнт чи спеціаліст — і не
@@ -244,6 +267,14 @@ const DashboardPage = () => {
                 >
                   Чат
                 </Link>
+                {canJoinVideo(session) && (
+                  <Link
+                    to={`/sessions/${session.id}/video`}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    Приєднатися до відео
+                  </Link>
+                )}
                 {dbUser?.role === "CLIENT" && session.status === "CREATED" && (
                   <Link
                     to={`/sessions/${session.id}/donate`}
