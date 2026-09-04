@@ -12,6 +12,7 @@ import NotificationsPage from "../pages/Notifications/NotificationsPage";
 import AdminPage from "../pages/Admin/AdminPage";
 import SpecialistProfileEditPage from "../pages/SpecialistProfile/SpecialistProfileEditPage";
 import DonationPage from "../pages/Donation/DonationPage";
+import VideoSessionPage from "../pages/VideoSession/VideoSessionPage";
 import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import ReviewPage from "../pages/Review/ReviewPage";
 import ThoughtAnalysisPage from "../pages/ThoughtAnalysis/ThoughtAnalysisPage";
@@ -34,6 +35,7 @@ const AppRoutes = () => {
           <Route path="/specialists" element={<SpecialistsPage />} />
           <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
           <Route path="/sessions/:id/chat" element={<ChatPage />} />
+          <Route path="/sessions/:id/video" element={<VideoSessionPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route element={<RoleRoute allow={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminPage />} />
