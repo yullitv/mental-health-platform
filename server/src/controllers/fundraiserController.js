@@ -30,7 +30,7 @@ exports.getAllFundraisers = async (req, res) => {
 // POST /api/fundraisers — створення нового фонду, лише адмін
 exports.createFundraiser = async (req, res) => {
   try {
-    const { name, description, bankJarUrl, category, logoUrl, isVerified } = req.body;
+    const { name, description, bankJarUrl, category, logoUrl, isVerified, monobankJarId } = req.body;
 
     if (!name || !bankJarUrl) {
       return res.status(400).json({ message: "Поля 'name' та 'bankJarUrl' обов'язкові" });
@@ -44,6 +44,7 @@ exports.createFundraiser = async (req, res) => {
         category,
         logoUrl,
         isVerified: !!isVerified,
+        monobankJarId: monobankJarId || null,
       },
     });
 
@@ -58,7 +59,8 @@ exports.createFundraiser = async (req, res) => {
 exports.updateFundraiser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, bankJarUrl, category, logoUrl, isVerified, isActive } = req.body;
+    const { name, description, bankJarUrl, category, logoUrl, isVerified, isActive, monobankJarId } =
+      req.body;
 
     const existing = await prisma.fundraiser.findUnique({ where: { id } });
     if (!existing) {
@@ -75,6 +77,7 @@ exports.updateFundraiser = async (req, res) => {
         ...(logoUrl !== undefined && { logoUrl }),
         ...(isVerified !== undefined && { isVerified }),
         ...(isActive !== undefined && { isActive }),
+        ...(monobankJarId !== undefined && { monobankJarId: monobankJarId || null }),
       },
     });
 

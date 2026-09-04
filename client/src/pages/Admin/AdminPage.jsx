@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
+import { DONATION_AI_STATUS_LABELS } from "../../constants/donationVerification";
 
 const AdminPage = () => {
   const { getToken } = useAuth();
@@ -9,6 +10,11 @@ const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
+
+  const [pendingDonations, setPendingDonations] = useState([]);
+  const [isLoadingDonations, setIsLoadingDonations] = useState(true);
+  const [donationsError, setDonationsError] = useState("");
+  const [donationBusyId, setDonationBusyId] = useState(null);
 
   const loadPending = useCallback(async () => {
     try {
@@ -26,9 +32,29 @@ const AdminPage = () => {
     }
   }, [getToken]);
 
+  // Адмін бачить усі донати на розгляді (не лише свої сесії, як спеціаліст) —
+  // бекенд (GET /donations/pending) уже це підтримує, тут просто відкриваємо
+  // це в інтерфейсі.
+  const loadPendingDonations = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/donations/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Не вдалось завантажити донати");
+      setPendingDonations(await response.json());
+    } catch (err) {
+      console.error("❌ Помилка завантаження донатів:", err);
+      setDonationsError("Не вдалось завантажити донати.");
+    } finally {
+      setIsLoadingDonations(false);
+    }
+  }, [getToken]);
+
   useEffect(() => {
     loadPending();
-  }, [loadPending]);
+    loadPendingDonations();
+  }, [loadPending, loadPendingDonations]);
 
   const handleVerify = async (id, status) => {
     setBusyId(id);
@@ -56,8 +82,31 @@ const AdminPage = () => {
     }
   };
 
+  const handleDonationAction = async (id, action) => {
+    setDonationBusyId(id);
+    setDonationsError("");
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/donations/${id}/${action}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Не вдалось обробити донат");
+      }
+      await loadPendingDonations();
+    } catch (err) {
+      console.error("❌ Помилка обробки донату:", err);
+      setDonationsError(err.message);
+    } finally {
+      setDonationBusyId(null);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
+    <div className="max-w-4xl mx-auto text-left space-y-6">
+    <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
       <h2 className="text-2xl font-extrabold text-ink mb-4">
         Заявки спеціалістів на верифікацію
       </h2>
@@ -202,6 +251,93 @@ const AdminPage = () => {
           </div>
         ))}
       </div>
+    </div>
+
+    <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
+      <h2 className="text-2xl font-extrabold text-ink mb-4">Донати на розгляді</h2>
+
+      {isLoadingDonations && <p className="text-muted">Завантаження...</p>}
+      {donationsError && <p className="text-red-500 mb-2">{donationsError}</p>}
+      {!isLoadingDonations && !donationsError && pendingDonations.length === 0 && (
+        <p className="text-muted">Донатів на розгляді немає.</p>
+      )}
+
+      <div className="flex flex-col gap-3">
+        {pendingDonations.map((donation) => (
+          <div
+            key={donation.id}
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-canvas border border-border rounded-xl p-4"
+          >
+            <div>
+              <p className="font-semibold text-ink">
+                {donation.session?.client?.firstName} {donation.session?.client?.lastName}
+              </p>
+              <p className="text-sm text-muted">
+                {donation.amount ? `${donation.amount} грн · ` : ""}
+                {donation.fundraiser?.name}
+              </p>
+              {donation.proofUrl ? (
+                <a
+                  href={
+                    donation.proofUrl?.startsWith("http")
+                      ? donation.proofUrl
+                      : `${SERVER_ORIGIN}${donation.proofUrl}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Переглянути підтвердження
+                </a>
+              ) : (
+                <p className="text-sm text-muted italic">
+                  Клієнт ще не додав скрін — очікуємо або автоматичне
+                  підтвердження банком, або скрін для ручної перевірки.
+                </p>
+              )}
+              {donation.bankConfirmed && (
+                <p className="text-xs font-semibold text-primary mt-1">
+                  ✅ Підтверджено реальним переказом у банці фонду
+                </p>
+              )}
+              {donation.aiScreeningStatus && (
+                <p
+                  className={`text-xs mt-1 ${
+                    donation.aiScreeningStatus === "OK" ? "text-muted" : "text-accent"
+                  }`}
+                >
+                  {DONATION_AI_STATUS_LABELS[donation.aiScreeningStatus] ||
+                    donation.aiScreeningStatus}
+                  {donation.extractedAmount != null &&
+                    ` (AI прочитав: ${donation.extractedAmount} грн)`}
+                </p>
+              )}
+              {donation.aiScreeningNotes && (
+                <p className="text-xs text-muted mt-0.5">{donation.aiScreeningNotes}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {donation.proofUrl && (
+                <button
+                  onClick={() => handleDonationAction(donation.id, "confirm")}
+                  disabled={donationBusyId === donation.id}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
+                >
+                  Підтвердити
+                </button>
+              )}
+              <button
+                onClick={() => handleDonationAction(donation.id, "reject")}
+                disabled={donationBusyId === donation.id}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-canvas border border-border text-ink hover:border-red-400 transition disabled:opacity-50"
+              >
+                Відхилити
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
     </div>
   );
 };

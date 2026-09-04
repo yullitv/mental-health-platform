@@ -5,6 +5,7 @@ import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import StreakCard from "../../components/dashboard/StreakCard";
 import AvailabilityManager from "../../components/dashboard/AvailabilityManager";
+import { DONATION_AI_STATUS_LABELS } from "../../constants/donationVerification";
 
 const STATUS_LABELS = {
   CREATED: "Заброньовано",
@@ -141,27 +142,56 @@ const DashboardPage = () => {
                     {donation.amount ? `${donation.amount} грн · ` : ""}
                     {donation.fundraiser?.name}
                   </p>
-                  <a
-                    href={
-                      donation.proofUrl?.startsWith("http")
-                        ? donation.proofUrl
-                        : `${SERVER_ORIGIN}${donation.proofUrl}`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-semibold text-primary hover:underline"
-                  >
-                    Переглянути підтвердження
-                  </a>
+                  {donation.proofUrl ? (
+                    <a
+                      href={
+                        donation.proofUrl?.startsWith("http")
+                          ? donation.proofUrl
+                          : `${SERVER_ORIGIN}${donation.proofUrl}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      Переглянути підтвердження
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted italic">
+                      Клієнт ще не додав скрін — очікуємо або автоматичне
+                      підтвердження банком, або скрін для ручної перевірки.
+                    </p>
+                  )}
+                  {donation.bankConfirmed && (
+                    <p className="text-xs font-semibold text-primary mt-1">
+                      ✅ Підтверджено реальним переказом у банці фонду
+                    </p>
+                  )}
+                  {donation.aiScreeningStatus && (
+                    <p
+                      className={`text-xs mt-1 ${
+                        donation.aiScreeningStatus === "OK" ? "text-muted" : "text-accent"
+                      }`}
+                    >
+                      {DONATION_AI_STATUS_LABELS[donation.aiScreeningStatus] ||
+                        donation.aiScreeningStatus}
+                      {donation.extractedAmount != null &&
+                        ` (AI прочитав: ${donation.extractedAmount} грн)`}
+                    </p>
+                  )}
+                  {donation.aiScreeningNotes && (
+                    <p className="text-xs text-muted mt-0.5">{donation.aiScreeningNotes}</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleDonationAction(donation.id, "confirm")}
-                    disabled={busyId === donation.id}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
-                  >
-                    Підтвердити
-                  </button>
+                  {donation.proofUrl && (
+                    <button
+                      onClick={() => handleDonationAction(donation.id, "confirm")}
+                      disabled={busyId === donation.id}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
+                    >
+                      Підтвердити
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDonationAction(donation.id, "reject")}
                     disabled={busyId === donation.id}
