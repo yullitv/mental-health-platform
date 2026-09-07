@@ -4,6 +4,7 @@ import ProtectedRoute from "../components/layout/ProtectedRoute";
 import RoleRoute from "../components/layout/RoleRoute";
 import HomePage from "../pages/Home/HomePage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
+import ToolsPage from "../pages/Tools/ToolsPage";
 import SpecialistsPage from "../pages/Specialists/SpecialistsPage";
 import SpecialistDetailPage from "../pages/Specialists/SpecialistDetailPage";
 import DiaryPage from "../pages/Diary/DiaryPage";
@@ -13,7 +14,6 @@ import AdminPage from "../pages/Admin/AdminPage";
 import SpecialistProfileEditPage from "../pages/SpecialistProfile/SpecialistProfileEditPage";
 import DonationPage from "../pages/Donation/DonationPage";
 import VideoSessionPage from "../pages/VideoSession/VideoSessionPage";
-import OnboardingPage from "../pages/Onboarding/OnboardingPage";
 import ReviewPage from "../pages/Review/ReviewPage";
 import ThoughtAnalysisPage from "../pages/ThoughtAnalysis/ThoughtAnalysisPage";
 import CrisisPage from "../pages/Crisis/CrisisPage";
@@ -30,10 +30,15 @@ const AppRoutes = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
 
+        {/* Публічно доступно і без реєстрації: перегляд спеціалістів (без
+            бронювання) і кризова підтримка — гарячі лінії не можуть
+            залежати від того, чи встигла людина зареєструватись. */}
+        <Route path="/specialists" element={<SpecialistsPage />} />
+        <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
+        <Route path="/crisis" element={<CrisisPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/specialists" element={<SpecialistsPage />} />
-          <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
           <Route path="/sessions/:id/chat" element={<ChatPage />} />
           <Route path="/sessions/:id/video" element={<VideoSessionPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
@@ -46,12 +51,11 @@ const AppRoutes = () => {
           </Route>
 
           <Route element={<RoleRoute allow={["CLIENT"]} />}>
+            <Route path="/tools" element={<ToolsPage />} />
             <Route path="/sessions/:id/donate" element={<DonationPage />} />
-            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/sessions/:id/review" element={<ReviewPage />} />
             <Route path="/diary" element={<DiaryPage />} />
             <Route path="/thought-analysis" element={<ThoughtAnalysisPage />} />
-            <Route path="/crisis" element={<CrisisPage />} />
             <Route path="/screening" element={<ScreeningPage />} />
             <Route path="/breathing" element={<BreathingPage />} />
             <Route path="/companion" element={<CompanionPage />} />

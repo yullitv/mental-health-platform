@@ -3,6 +3,25 @@ import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
 
+// Той самий список, що клієнт бачив в анкеті ("з чим працює") — тепер
+// спеціаліст сам відмічає, з якими запитами працює, і клієнт може
+// відфільтрувати список за цим на сторінці "Спеціалісти".
+const CONCERN_OPTIONS = [
+  { value: "anxiety", label: "Тривожність" },
+  { value: "stress", label: "Стрес" },
+  { value: "relationships", label: "Стосунки" },
+  { value: "sleep", label: "Сон" },
+  { value: "self_esteem", label: "Самооцінка" },
+  { value: "grief", label: "Втрата / горе" },
+  { value: "other", label: "Інше" },
+];
+
+const GENDER_OPTIONS = [
+  { value: "", label: "Не вказано" },
+  { value: "female", label: "Жінка" },
+  { value: "male", label: "Чоловік" },
+];
+
 const STATUS_LABELS = {
   PENDING: { text: "На розгляді", className: "bg-accent-soft text-accent" },
   APPROVED: { text: "Підтверджено", className: "bg-primary-soft text-primary" },
@@ -22,6 +41,8 @@ const SpecialistProfileEditPage = () => {
   const [form, setForm] = useState({
     bio: "",
     specializations: "",
+    concerns: [],
+    gender: "",
     hourlyRate: "",
     experience: "",
     fullLegalName: "",
@@ -42,6 +63,8 @@ const SpecialistProfileEditPage = () => {
       setForm({
         bio: data.bio || "",
         specializations: (data.specializations || []).join(", "),
+        concerns: data.concerns || [],
+        gender: data.gender || "",
         hourlyRate: data.hourlyRate ?? "",
         experience: data.experience || "",
         fullLegalName: data.fullLegalName || "",
@@ -64,6 +87,14 @@ const SpecialistProfileEditPage = () => {
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const toggleConcern = (value) =>
+    setForm((prev) => ({
+      ...prev,
+      concerns: prev.concerns.includes(value)
+        ? prev.concerns.filter((c) => c !== value)
+        : [...prev.concerns, value],
+    }));
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -83,6 +114,8 @@ const SpecialistProfileEditPage = () => {
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
+          concerns: form.concerns,
+          gender: form.gender || null,
           hourlyRate: form.hourlyRate === "" ? null : Number(form.hourlyRate),
           experience: form.experience,
           fullLegalName: form.fullLegalName,
@@ -256,11 +289,49 @@ const SpecialistProfileEditPage = () => {
         />
         <input
           type="text"
-          placeholder="Спеціалізації через кому: КПТ, Гештальт"
+          placeholder="Підходи в роботі через кому: КПТ, Гештальт"
           value={form.specializations}
           onChange={handleChange("specializations")}
           className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
         />
+
+        <div>
+          <p className="text-sm font-semibold text-ink mb-2">
+            З чим працюєш (клієнт зможе відфільтрувати за цим)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {CONCERN_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => toggleConcern(option.value)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+                  form.concerns.includes(option.value)
+                    ? "bg-primary text-white border-primary"
+                    : "bg-canvas text-muted border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-ink mb-2">Стать</p>
+          <select
+            value={form.gender}
+            onChange={handleChange("gender")}
+            className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
+          >
+            {GENDER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <textarea
           placeholder="Досвід роботи: скільки років практикуєш, де працювала раніше"
           value={form.experience}

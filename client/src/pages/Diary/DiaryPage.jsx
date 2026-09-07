@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
+import StreakCard from "../../components/dashboard/StreakCard";
 import {
   clearStoredKey,
   decryptEntry,
@@ -1050,6 +1051,8 @@ const DiaryPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto text-left space-y-6">
+      <StreakCard />
+
       {showBackupBanner && (
         <KeyBackupBanner
           encryptionKey={encryptionKey}
