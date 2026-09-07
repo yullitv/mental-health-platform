@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
 import {
@@ -12,6 +12,18 @@ import {
 } from "../../utils/diaryCrypto";
 
 const SCALE = [1, 2, 3, 4, 5];
+
+// Web Speech API замість хмарної транскрипції (Gemini/Whisper): аудіо
+// ніколи не потрапляє на наш сервер чи AI-провайдера — розпізнавання
+// відбувається в самому браузері, а в щоденник (і далі в шифрування)
+// потрапляє вже готовий текст, так само як при ручному наборі. Це
+// узгоджено з E2EE-моделлю щоденника. Мінус: стабільно працює лише в
+// Chrome/Edge (Chromium) — у Firefox/Safari підтримки нема, тож кнопка
+// диктування там просто не показується.
+const SpeechRecognitionAPI =
+  typeof window !== "undefined"
+    ? window.SpeechRecognition || window.webkitSpeechRecognition
+    : null;
 
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString("uk-UA", {
@@ -490,6 +502,165 @@ const KeyBackupBanner = ({ encryptionKey, onDismiss }) => {
   );
 };
 
+const PDF_RANGE_OPTIONS = [
+  { value: 7, label: "7 днів" },
+  { value: 30, label: "30 днів" },
+  { value: 90, label: "90 днів" },
+  { value: null, label: "Весь час" },
+];
+
+function arrayBufferToBase64(buffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+// Реєструє шрифт Manrope (він же бренд-шрифт застосунку) у jsPDF, щоб
+// кирилиця в PDF відображалась коректно — дефолтні шрифти jsPDF (Helvetica
+// тощо) кириличних гліфів не мають взагалі.
+async function registerCyrillicFont(doc) {
+  const response = await fetch("/fonts/Manrope-Variable.ttf");
+  if (!response.ok) throw new Error("Не вдалось завантажити шрифт для PDF");
+  const buffer = await response.arrayBuffer();
+  const base64 = arrayBufferToBase64(buffer);
+  doc.addFileToVFS("Manrope-Variable.ttf", base64);
+  doc.addFont("Manrope-Variable.ttf", "Manrope", "normal");
+  doc.setFont("Manrope", "normal");
+}
+
+// Формує сам PDF-документ зі списку РОЗШИФРОВАНИХ записів (усе рахується
+// вже в браузері — jsPDF ніколи не бачить нічого, крім готового тексту).
+function renderDiaryReportPdf(doc, entries, rangeLabel) {
+  const margin = 40;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const contentWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  const ensureSpace = (needed) => {
+    if (y + needed > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const primary = [108, 93, 211];
+  const ink = [36, 31, 51];
+  const muted = [107, 100, 120];
+
+  doc.setFont("Manrope", "normal");
+  doc.setFontSize(18);
+  doc.setTextColor(...primary);
+  doc.text("Опора — звіт щоденника самопочуття", margin, y);
+  y += 22;
+
+  doc.setFontSize(10);
+  doc.setTextColor(...muted);
+  const todayLabel = new Date().toLocaleDateString("uk-UA");
+  doc.text(`Період: ${rangeLabel} · Сформовано: ${todayLabel} · Записів: ${entries.length}`, margin, y);
+  y += 14;
+  const wrappedDisclaimer = doc.splitTextToSize(
+    "Звіт згенеровано локально в браузері з розшифрованих записів — сервер Опори не має доступу до цього вмісту. Це самозвіт клієнта, а не діагностика; призначений як матеріал для розмови зі спеціалістом.",
+    contentWidth,
+  );
+  doc.text(wrappedDisclaimer, margin, y);
+  y += wrappedDisclaimer.length * 12 + 14;
+
+  // Середні показники за період
+  doc.setFontSize(13);
+  doc.setTextColor(...ink);
+  doc.text("Середні показники", margin, y);
+  y += 18;
+
+  doc.setFontSize(10);
+  for (const { key, label } of CHART_METRIC_OPTIONS) {
+    const vals = entries.filter((e) => e[key] != null).map((e) => e[key]);
+    if (vals.length === 0) continue;
+    doc.setTextColor(...muted);
+    doc.text(`${label}:`, margin, y);
+    doc.setTextColor(...ink);
+    doc.text(`${average(vals).toFixed(1)} / 5`, margin + 110, y);
+    y += 14;
+  }
+  const sleepVals = entries.filter((e) => e.sleepHours != null).map((e) => e.sleepHours);
+  if (sleepVals.length > 0) {
+    doc.setTextColor(...muted);
+    doc.text("Сон:", margin, y);
+    doc.setTextColor(...ink);
+    doc.text(`${average(sleepVals).toFixed(1)} год`, margin + 110, y);
+    y += 14;
+  }
+  y += 10;
+
+  // Помічені закономірності — той самий генератор, що на сторінці, лише
+  // порахований саме для записів обраного періоду.
+  const periodInsights = generateInsights(entries);
+  if (periodInsights.length > 0) {
+    ensureSpace(24);
+    doc.setFontSize(13);
+    doc.setTextColor(...ink);
+    doc.text("Помічені закономірності", margin, y);
+    y += 18;
+    doc.setFontSize(10);
+    for (const ins of periodInsights) {
+      const wrapped = doc.splitTextToSize(`• ${ins.text}`, contentWidth);
+      ensureSpace(wrapped.length * 13 + 4);
+      doc.setTextColor(...ink);
+      doc.text(wrapped, margin, y);
+      y += wrapped.length * 13 + 4;
+    }
+    y += 10;
+  }
+
+  // Записи по днях
+  ensureSpace(24);
+  doc.setFontSize(13);
+  doc.setTextColor(...ink);
+  doc.text("Записи по днях", margin, y);
+  y += 18;
+
+  doc.setFontSize(9);
+  for (const entry of entries) {
+    ensureSpace(28);
+    doc.setTextColor(...ink);
+    const dateLabel = new Date(entry.date).toLocaleDateString("uk-UA", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const metricsLine = CHART_METRIC_OPTIONS
+      .filter(({ key }) => entry[key] != null)
+      .map(({ key, label }) => `${label} ${entry[key]}/5`)
+      .join("   ");
+    doc.text(dateLabel, margin, y);
+    doc.text(metricsLine, margin + 75, y);
+    if (entry.sleepHours != null) {
+      doc.text(`Сон ${entry.sleepHours} год`, margin + 380, y);
+    }
+    y += 12;
+
+    if (Array.isArray(entry.factors) && entry.factors.length > 0) {
+      doc.setTextColor(...muted);
+      const factorsText = entry.factors.map((f) => FACTOR_LABELS[f] ?? f).join(", ");
+      doc.text(`Що вплинуло: ${factorsText}`, margin + 12, y);
+      y += 12;
+    }
+
+    if (entry.note) {
+      doc.setTextColor(...muted);
+      const wrappedNote = doc.splitTextToSize(entry.note, contentWidth - 12);
+      ensureSpace(wrappedNote.length * 12 + 4);
+      doc.text(wrappedNote, margin + 12, y);
+      y += wrappedNote.length * 12 + 4;
+    }
+    y += 6;
+  }
+}
+
 const DiaryPage = () => {
   const { getToken } = useAuth();
 
@@ -497,6 +668,9 @@ const DiaryPage = () => {
   const [keyStatus, setKeyStatus] = useState("loading");
   const [encryptionKey, setEncryptionKey] = useState(null);
   const [showBackupBanner, setShowBackupBanner] = useState(false);
+  const [pdfRange, setPdfRange] = useState(30);
+  const [pdfStatus, setPdfStatus] = useState("idle");
+  const [pdfError, setPdfError] = useState("");
   const [keyGateError, setKeyGateError] = useState("");
 
   const [rawEntries, setRawEntries] = useState([]);
@@ -509,6 +683,10 @@ const DiaryPage = () => {
   const [stress, setStress] = useState(3);
   const [sleepHours, setSleepHours] = useState("");
   const [note, setNote] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [voiceError, setVoiceError] = useState("");
+  const recognitionRef = useRef(null);
   const [factors, setFactors] = useState([]);
   const [chartPeriod, setChartPeriod] = useState("30");
   const [chartMetrics, setChartMetrics] = useState(["mood", "energy", "anxiety"]);
@@ -702,6 +880,61 @@ const DiaryPage = () => {
     }
   };
 
+  // Зупиняємо диктування, якщо компонент розмонтовується (перехід на іншу
+  // сторінку) — інакше розпізнавання й доступ до мікрофона лишились б жити.
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  const startVoiceNote = () => {
+    if (!SpeechRecognitionAPI) return;
+    setVoiceError("");
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "uk-UA";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let finalChunk = "";
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalChunk += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      if (finalChunk.trim()) {
+        setNote((prev) => (prev ? `${prev} ${finalChunk.trim()}` : finalChunk.trim()));
+      }
+      setInterimTranscript(interim);
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setVoiceError("Немає доступу до мікрофона — дозволь його для цього сайту.");
+      } else if (event.error !== "no-speech" && event.error !== "aborted") {
+        setVoiceError("Розпізнавання мовлення не вдалось.");
+      }
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      setInterimTranscript("");
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopVoiceNote = () => {
+    recognitionRef.current?.stop();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!encryptionKey) return;
@@ -749,6 +982,39 @@ const DiaryPage = () => {
   );
 
   const insights = useMemo(() => generateInsights(validEntries), [validEntries]);
+
+  const handleExportPdf = async () => {
+    setPdfError("");
+    const rangeEntries = pdfRange
+      ? validEntries.filter((e) => {
+          const daysAgo = (Date.now() - new Date(e.date).getTime()) / 86400000;
+          return daysAgo <= pdfRange;
+        })
+      : validEntries;
+
+    if (rangeEntries.length === 0) {
+      setPdfError("За обраний період немає записів.");
+      return;
+    }
+
+    setPdfStatus("generating");
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      await registerCyrillicFont(doc);
+
+      const rangeOption = PDF_RANGE_OPTIONS.find((o) => o.value === pdfRange);
+      renderDiaryReportPdf(doc, rangeEntries, rangeOption?.label ?? "Весь час");
+
+      const fileDate = new Date().toISOString().slice(0, 10);
+      doc.save(`opora-shchodennyk-${fileDate}.pdf`);
+      setPdfStatus("idle");
+    } catch (err) {
+      console.error("❌ Помилка генерації PDF:", err);
+      setPdfError("Не вдалось згенерувати PDF. Спробуй ще раз.");
+      setPdfStatus("idle");
+    }
+  };
   const todaySummary = useMemo(
     () => buildTodaySummary(validEntries),
     [validEntries],
@@ -966,9 +1232,24 @@ const DiaryPage = () => {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-ink mb-2 block">
-              Нотатка (необов'язково)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold text-ink block">
+                Нотатка (необов'язково)
+              </label>
+              {SpeechRecognitionAPI && (
+                <button
+                  type="button"
+                  onClick={isRecording ? stopVoiceNote : startVoiceNote}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+                    isRecording
+                      ? "bg-danger text-white border-transparent animate-pulse"
+                      : "bg-canvas border-border text-ink hover:border-primary"
+                  }`}
+                >
+                  {isRecording ? "⏹ Зупинити" : "🎤 Диктувати"}
+                </button>
+              )}
+            </div>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -976,6 +1257,19 @@ const DiaryPage = () => {
               className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Що вплинуло на день?"
             />
+            {isRecording && (
+              <p className="text-xs text-muted mt-1 italic">
+                🎙️ Слухаю... {interimTranscript}
+              </p>
+            )}
+            {voiceError && (
+              <p className="text-xs text-red-500 mt-1">{voiceError}</p>
+            )}
+            {!SpeechRecognitionAPI && (
+              <p className="text-xs text-muted mt-1">
+                Диктування голосом підтримується лише в Chrome/Edge.
+              </p>
+            )}
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -1122,6 +1416,46 @@ const DiaryPage = () => {
             щоденник регулярніше, і тут з'являться інсайти.
           </p>
         )}
+      </div>
+
+      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
+        <h3 className="text-xl font-extrabold text-ink mb-1">
+          📄 Звіт для спеціаліста
+        </h3>
+        <p className="text-sm text-muted mb-4">
+          PDF з динамікою показників, закономірностями й записами за обраний
+          період — щоб було зручніше обговорити зі своїм спеціалістом.
+          Формується прямо в браузері з розшифрованих даних, сервер його не
+          бачить.
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {PDF_RANGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => setPdfRange(opt.value)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition ${
+                pdfRange === opt.value
+                  ? "bg-primary text-white border-transparent"
+                  : "bg-canvas border-border text-ink hover:border-primary"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {pdfError && <p className="text-sm text-red-500 mb-3">{pdfError}</p>}
+
+        <button
+          type="button"
+          onClick={handleExportPdf}
+          disabled={pdfStatus === "generating" || validEntries.length === 0}
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
+        >
+          {pdfStatus === "generating" ? "Формую PDF..." : "Завантажити PDF-звіт"}
+        </button>
       </div>
 
       {weekSummary && (
