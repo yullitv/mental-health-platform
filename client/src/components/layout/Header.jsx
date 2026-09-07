@@ -1,4 +1,4 @@
-import { SignedIn, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -30,6 +30,14 @@ const Header = () => {
         >
           {theme === "dark" ? "☀️" : "🌙"}
         </button>
+        <SignedOut>
+          <Link
+            to="/login"
+            className="text-sm font-semibold text-ink px-4 py-2 rounded-xl border border-border hover:border-primary hover:text-primary transition"
+          >
+            Увійти
+          </Link>
+        </SignedOut>
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
         </SignedIn>

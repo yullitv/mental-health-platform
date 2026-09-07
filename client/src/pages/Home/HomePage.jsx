@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignUpButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
@@ -83,22 +83,18 @@ const HomePage = () => {
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
                 <SignedOut>
-                  <SignUpButton
-                    mode="modal"
-                    unsafeMetadata={{ intendedRole: "CLIENT" }}
+                  <Link
+                    to="/register?role=client"
+                    className="flex-1 bg-primary text-white px-6 py-4 rounded-2xl font-semibold hover:bg-primary-dark transition text-center"
                   >
-                    <button className="flex-1 bg-primary text-white px-6 py-4 rounded-2xl font-semibold hover:bg-primary-dark transition">
-                      Я шукаю підтримку
-                    </button>
-                  </SignUpButton>
-                  <SignUpButton
-                    mode="modal"
-                    unsafeMetadata={{ intendedRole: "SPECIALIST" }}
+                    Я шукаю підтримку
+                  </Link>
+                  <Link
+                    to="/register?role=specialist"
+                    className="flex-1 bg-canvas border border-border text-ink px-6 py-4 rounded-2xl font-semibold hover:border-primary transition text-center"
                   >
-                    <button className="flex-1 bg-canvas border border-border text-ink px-6 py-4 rounded-2xl font-semibold hover:border-primary transition">
-                      Я спеціаліст
-                    </button>
-                  </SignUpButton>
+                    Я спеціаліст
+                  </Link>
                 </SignedOut>
                 <SignedIn>
                   <Link
@@ -196,14 +192,12 @@ const HomePage = () => {
                 розкладом, чат і відеосесії з клієнтами, прозорий облік донатів
                 замість рахунків.
               </p>
-              <SignUpButton
-                mode="modal"
-                unsafeMetadata={{ intendedRole: "SPECIALIST" }}
+              <Link
+                to="/register?role=specialist"
+                className="inline-block bg-primary text-white px-6 py-3 rounded-2xl font-semibold hover:bg-primary-dark transition"
               >
-                <button className="bg-primary text-white px-6 py-3 rounded-2xl font-semibold hover:bg-primary-dark transition">
-                  Приєднатись як спеціаліст
-                </button>
-              </SignUpButton>
+                Приєднатись як спеціаліст
+              </Link>
             </div>
           </SignedOut>
 
@@ -234,22 +228,18 @@ const HomePage = () => {
                 Готова(ий) спробувати?
               </h2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
-                <SignUpButton
-                  mode="modal"
-                  unsafeMetadata={{ intendedRole: "CLIENT" }}
+                <Link
+                  to="/register?role=client"
+                  className="flex-1 bg-primary text-white px-6 py-4 rounded-2xl font-semibold hover:bg-primary-dark transition text-center"
                 >
-                  <button className="flex-1 bg-primary text-white px-6 py-4 rounded-2xl font-semibold hover:bg-primary-dark transition">
-                    Я шукаю підтримку
-                  </button>
-                </SignUpButton>
-                <SignUpButton
-                  mode="modal"
-                  unsafeMetadata={{ intendedRole: "SPECIALIST" }}
+                  Я шукаю підтримку
+                </Link>
+                <Link
+                  to="/register?role=specialist"
+                  className="flex-1 bg-surface border border-border text-ink px-6 py-4 rounded-2xl font-semibold hover:border-primary transition text-center"
                 >
-                  <button className="flex-1 bg-surface border border-border text-ink px-6 py-4 rounded-2xl font-semibold hover:border-primary transition">
-                    Я спеціаліст
-                  </button>
-                </SignUpButton>
+                  Я спеціаліст
+                </Link>
               </div>
             </div>
           </SignedOut>
