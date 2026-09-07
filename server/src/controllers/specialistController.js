@@ -68,6 +68,8 @@ exports.updateMyProfile = async (req, res) => {
     const {
       bio,
       specializations,
+      concerns,
+      gender,
       hourlyRate,
       documentsUrl,
       experience,
@@ -98,6 +100,8 @@ exports.updateMyProfile = async (req, res) => {
       data: {
         ...(bio !== undefined && { bio }),
         ...(specializations !== undefined && { specializations }),
+        ...(concerns !== undefined && { concerns }),
+        ...(gender !== undefined && { gender: gender || null }),
         ...(hourlyRate !== undefined && {
           hourlyRate: hourlyRate === null || hourlyRate === '' ? null : Number(hourlyRate),
         }),

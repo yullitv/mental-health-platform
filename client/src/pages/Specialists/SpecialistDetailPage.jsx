@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, SignUpButton } from "@clerk/clerk-react";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
@@ -28,6 +28,7 @@ const SpecialistDetailPage = () => {
   const navigate = useNavigate();
   const { dbUser } = useCurrentUser();
   const isAdmin = dbUser?.role === "ADMIN";
+  const isGuest = !dbUser;
 
   const [specialist, setSpecialist] = useState(null);
   const [slots, setSlots] = useState([]);
@@ -143,12 +144,17 @@ const SpecialistDetailPage = () => {
           Перегляд адміністратора: бронювання недоступне для цієї ролі.
         </p>
       )}
+      {isGuest && slots.length > 0 && (
+        <p className="text-muted text-sm mb-2">
+          Щоб забронювати час, спершу зареєструйся.
+        </p>
+      )}
       {slots.length === 0 && (
         <p className="text-muted">Наразі немає вільних слотів.</p>
       )}
       <div className="flex flex-col gap-2">
         {slots.map((slot) =>
-          isAdmin ? (
+          isAdmin || isGuest ? (
             <div
               key={slot.id}
               className="flex justify-between items-center bg-canvas border border-border rounded-xl px-4 py-3 opacity-70"
@@ -171,6 +177,14 @@ const SpecialistDetailPage = () => {
           )
         )}
       </div>
+
+      {isGuest && slots.length > 0 && (
+        <SignUpButton mode="modal" unsafeMetadata={{ intendedRole: "CLIENT" }}>
+          <button className="w-full mt-4 px-5 py-3 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition">
+            Зареєструватись і забронювати
+          </button>
+        </SignUpButton>
+      )}
 
       {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
     </div>

@@ -3,20 +3,30 @@ import Header from "./Header";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { useNotifications } from "../../context/NotificationContext";
 
-// "Головна" сюди свідомо не входить: залогінений користувач з "/" одразу
-// редіректиться на "/dashboard" (див. HomePage.jsx), тож пункт навігації
-// туди був би просто дублем "Кабінету".
+// "Головна" (лендинг з описом платформи) доступна і залогіненим — вона
+// більше не редіректить одразу на "/dashboard" (див. HomePage.jsx).
 const baseNavItems = [
+  { to: "/", label: "Головна" },
   { to: "/dashboard", label: "Кабінет" },
   { to: "/specialists", label: "Спеціалісти" },
   { to: "/notifications", label: "Сповіщення" },
+];
+
+// Гість (не залогінена людина): "Головна" + те, що реально доступне без
+// акаунту — перегляд спеціалістів і кризова підтримка. "Кабінет"/
+// "Сповіщення" без логіну однаково нікуди не ведуть (ProtectedRoute
+// поверне на "/").
+const guestNavItems = [
+  { to: "/", label: "Головна" },
+  { to: "/specialists", label: "Спеціалісти" },
+  { to: "/crisis", label: "Потрібна допомога" },
 ];
 
 const AppLayout = () => {
   const { dbUser } = useCurrentUser();
   const { unreadCount } = useNotifications();
 
-  let navItems = baseNavItems;
+  let navItems = dbUser ? baseNavItems : guestNavItems;
   if (dbUser?.role === "ADMIN") {
     // "Кабінет" (сесії клієнта/спеціаліста) — не про роль адміна, його
     // робочий простір це "Адмін-панель". "Спеціалісти" лишаємо — корисно
@@ -27,16 +37,13 @@ const AppLayout = () => {
       { to: "/admin", label: "Адмін-панель" },
     ];
   } else if (dbUser?.role === "CLIENT") {
+    // Інструменти самодопомоги (щоденник, тести, дихання тощо) згруповані
+    // в одну сторінку "Інструменти" (ToolsPage.jsx) — окремий пункт меню
+    // поруч з іншими, а не 7 окремих пунктів чи підрозділ "Кабінету".
     navItems = [
-      ...baseNavItems,
-      { to: "/diary", label: "Щоденник" },
-      { to: "/thought-analysis", label: "Аналіз думки" },
-      { to: "/screening", label: "Тести" },
-      { to: "/breathing", label: "Дихання" },
-      { to: "/companion", label: "AI-розмова" },
-      { to: "/safety-plan", label: "Аптечка" },
-      { to: "/privacy", label: "Приватність" },
-      { to: "/onboarding", label: "Анкета" },
+      ...baseNavItems.slice(0, 2),
+      { to: "/tools", label: "Інструменти" },
+      ...baseNavItems.slice(2),
     ];
   } else if (dbUser?.role === "SPECIALIST") {
     // "Спеціалісти" — це бронювання ІНШИХ спеціалістів, спеціалісту в його
@@ -79,7 +86,7 @@ const AppLayout = () => {
         <Outlet />
       </main>
 
-      {dbUser?.role === "CLIENT" && (
+      {(!dbUser || dbUser.role === "CLIENT") && (
         <Link
           to="/crisis"
           className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-full text-sm font-semibold bg-danger text-white shadow-[0_8px_20px_rgba(226,87,76,0.35)] hover:bg-danger/90 transition"

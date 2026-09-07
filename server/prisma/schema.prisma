@@ -81,7 +81,9 @@ model SpecialistProfile {
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bio                String?
-  specializations    String[]           // Теги: "КПТ", "Гештальт"
+  specializations    String[]           // Підходи в роботі: "КПТ", "Гештальт"
+  concerns           String[]           // З чим працює (той самий список, що й в анкеті клієнта): "anxiety", "stress"...
+  gender             String?            // Стать спеціаліста: "female" | "male" — для фільтра клієнта
   hourlyRate         Int?               // Рекомендований донат
   verificationStatus VerificationStatus @default(PENDING)
   documentsUrl       String[]           // Посилання на дипломи/сертифікати

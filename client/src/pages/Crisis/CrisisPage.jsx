@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
 import { CRISIS_RESOURCES } from "../../constants/crisisResources";
+import { useCurrentUser } from "../../context/CurrentUserContext";
 
 const GROUNDING_STEPS = [
   { sense: "5", text: "речей, які ти бачиш навколо" },
@@ -17,6 +18,7 @@ const GROUNDING_STEPS = [
 // на будь-якій сторінці, а також з кризової картки в "Аналізі думки".
 const CrisisPage = () => {
   const { getToken } = useAuth();
+  const { dbUser } = useCurrentUser();
   const [activeSession, setActiveSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,29 +84,33 @@ const CrisisPage = () => {
             </div>
           ))}
         </div>
-        <Link
-          to="/breathing"
-          className="inline-block mt-4 text-sm font-semibold text-primary hover:underline"
-        >
-          Спробувати дихальну вправу →
-        </Link>
+        {dbUser && (
+          <Link
+            to="/breathing"
+            className="inline-block mt-4 text-sm font-semibold text-primary hover:underline"
+          >
+            Спробувати дихальну вправу →
+          </Link>
+        )}
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h3 className="text-lg font-extrabold text-ink mb-2">
-          🧰 Твоя аптечка ресурсу
-        </h3>
-        <p className="text-sm text-muted mb-4">
-          Спогади, дії й люди, які раніше вже допомагали тобі почуватись
-          краще — якщо ти заповнювала її заздалегідь.
-        </p>
-        <Link
-          to="/safety-plan"
-          className="inline-block px-5 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition"
-        >
-          Відкрити аптечку →
-        </Link>
-      </div>
+      {dbUser && (
+        <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
+          <h3 className="text-lg font-extrabold text-ink mb-2">
+            🧰 Твоя аптечка ресурсу
+          </h3>
+          <p className="text-sm text-muted mb-4">
+            Спогади, дії й люди, які раніше вже допомагали тобі почуватись
+            краще — якщо ти заповнювала її заздалегідь.
+          </p>
+          <Link
+            to="/safety-plan"
+            className="inline-block px-5 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition"
+          >
+            Відкрити аптечку →
+          </Link>
+        </div>
+      )}
 
       {!isLoading && activeSession && (
         <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">

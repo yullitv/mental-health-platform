@@ -3,7 +3,6 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
-import StreakCard from "../../components/dashboard/StreakCard";
 import AvailabilityManager from "../../components/dashboard/AvailabilityManager";
 import { DONATION_AI_STATUS_LABELS } from "../../constants/donationVerification";
 
@@ -143,8 +142,6 @@ const DashboardPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto text-left space-y-6">
-      {dbUser?.role === "CLIENT" && <StreakCard />}
-
       {dbUser?.role === "SPECIALIST" && pendingDonations.length > 0 && (
         <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
           <h2 className="text-xl font-extrabold text-ink mb-4">
