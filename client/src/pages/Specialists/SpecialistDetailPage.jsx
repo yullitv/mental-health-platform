@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth, SignUpButton } from "@clerk/clerk-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
@@ -179,11 +179,12 @@ const SpecialistDetailPage = () => {
       </div>
 
       {isGuest && slots.length > 0 && (
-        <SignUpButton mode="modal" unsafeMetadata={{ intendedRole: "CLIENT" }}>
-          <button className="w-full mt-4 px-5 py-3 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition">
-            Зареєструватись і забронювати
-          </button>
-        </SignUpButton>
+        <Link
+          to="/register?role=client"
+          className="block text-center w-full mt-4 px-5 py-3 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition"
+        >
+          Зареєструватись і забронювати
+        </Link>
       )}
 
       {error && <p className="text-red-500 text-sm mt-4">{error}</p>}

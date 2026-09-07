@@ -17,6 +17,8 @@ import VideoSessionPage from "../pages/VideoSession/VideoSessionPage";
 import ReviewPage from "../pages/Review/ReviewPage";
 import ThoughtAnalysisPage from "../pages/ThoughtAnalysis/ThoughtAnalysisPage";
 import CrisisPage from "../pages/Crisis/CrisisPage";
+import RegisterPage from "../pages/Auth/RegisterPage";
+import LoginPage from "../pages/Auth/LoginPage";
 import ScreeningPage from "../pages/Screening/ScreeningPage";
 import BreathingPage from "../pages/Breathing/BreathingPage";
 import CompanionPage from "../pages/Companion/CompanionPage";
@@ -36,6 +38,8 @@ const AppRoutes = () => {
         <Route path="/specialists" element={<SpecialistsPage />} />
         <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
         <Route path="/crisis" element={<CrisisPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
