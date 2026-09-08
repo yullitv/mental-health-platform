@@ -4,6 +4,7 @@ const specialistController = require('../controllers/specialistController');
 const requireRole = require('../middlewares/roleMiddleware');
 const uploadSpecialistDocs = require('../middlewares/uploadSpecialistDocs');
 const uploadSpecialistPhoto = require('../middlewares/uploadSpecialistPhoto');
+const { aiLimiter } = require('../middlewares/rateLimiters');
 
 const handleUpload = (req, res, next) => {
   uploadSpecialistDocs.array('documents', 3)(req, res, (err) => {
@@ -27,7 +28,7 @@ router.get('/', specialistController.getApprovedSpecialists);
 router.get('/pending', requireRole('ADMIN'), specialistController.getPendingSpecialists);
 router.get('/me', requireRole('SPECIALIST'), specialistController.getMyProfile);
 router.put('/me', requireRole('SPECIALIST'), specialistController.updateMyProfile);
-router.post('/me/documents', requireRole('SPECIALIST'), handleUpload, specialistController.uploadDocuments);
+router.post('/me/documents', requireRole('SPECIALIST'), aiLimiter, handleUpload, specialistController.uploadDocuments);
 router.post('/me/photo', requireRole('SPECIALIST'), handlePhotoUpload, specialistController.uploadPhoto);
 router.put('/:id/verify', requireRole('ADMIN'), specialistController.verifySpecialist);
 router.get('/:id', specialistController.getSpecialistById);

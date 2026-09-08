@@ -1,7 +1,18 @@
 const prisma = require('../prisma');
-const fs = require('fs');
-const path = require('path');
 const { getGeminiClient } = require('../utils/geminiClient');
+const { uploadBuffer, getPublicUrl, getPresignedUrl } = require('../utils/r2Client');
+
+const PUBLIC_SPECIALIST_SELECT = {
+  id: true,
+  bio: true,
+  specializations: true,
+  concerns: true,
+  gender: true,
+  hourlyRate: true,
+  photoUrl: true,
+  experience: true,
+  user: { select: { firstName: true, lastName: true } },
+};
 
 // GET /api/specialists — публічний список підтверджених спеціалістів.
 // Фільтр по user.role — захист від "осиротілого" SpecialistProfile: якщо
@@ -9,11 +20,13 @@ const { getGeminiClient } = require('../utils/geminiClient');
 // Studio), стара анкета не повинна лишатись видимою як публічний спеціаліст.
 exports.getApprovedSpecialists = async (req, res) => {
   try {
+    // Публічний ендпоінт — свідомо НЕ повертаємо fullLegalName,
+    // licenseNumber, documentsUrl, aiScreeningNotes тощо: це дані для
+    // верифікації адміном, а не для показу клієнтам. photoUrl тут —
+    // готовий публічний R2-URL, окремого перетворення не потребує.
     const specialists = await prisma.specialistProfile.findMany({
       where: { verificationStatus: 'APPROVED', user: { role: 'SPECIALIST' } },
-      include: {
-        user: { select: { firstName: true, lastName: true } },
-      },
+      select: PUBLIC_SPECIALIST_SELECT,
     });
     res.status(200).json(specialists);
   } catch (error) {
@@ -23,8 +36,8 @@ exports.getApprovedSpecialists = async (req, res) => {
 };
 
 // GET /api/specialists/pending — ADMIN: профілі, що очікують підтвердження.
-// Той самий захист від "осиротілого" профілю — не показуємо в черзі когось,
-// хто вже не має ролі SPECIALIST.
+// documentsUrl тут — короткочасні підписані посилання на R2 (не самі
+// ключі), тому кожен запит генерує їх заново.
 exports.getPendingSpecialists = async (req, res) => {
   try {
     const specialists = await prisma.specialistProfile.findMany({
@@ -33,7 +46,17 @@ exports.getPendingSpecialists = async (req, res) => {
         user: { select: { firstName: true, lastName: true, email: true } },
       },
     });
-    res.status(200).json(specialists);
+
+    const withPresignedDocs = await Promise.all(
+      specialists.map(async (specialist) => ({
+        ...specialist,
+        documentsUrl: await Promise.all(
+          specialist.documentsUrl.map((key) => getPresignedUrl(key))
+        ),
+      }))
+    );
+
+    res.status(200).json(withPresignedDocs);
   } catch (error) {
     console.error('❌ Помилка отримання заявок:', error);
     res.status(500).json({ message: 'Помилка сервера' });
@@ -62,7 +85,11 @@ function verificationDataChanged(profile, fields) {
   );
 }
 
-// PUT /api/specialists/me — спеціаліст редагує власний профіль
+// PUT /api/specialists/me — спеціаліст редагує власний профіль.
+// documentsUrl НЕ приймається звідси — це внутрішні ключі R2, які пише
+// лише uploadDocuments нижче (сам він перевірений сервером); якби клієнт
+// міг переписати їх напряму, він міг би підставити чужий ключ і потім
+// побачити його через власний getMyProfile (presigned URL).
 exports.updateMyProfile = async (req, res) => {
   try {
     const {
@@ -71,7 +98,6 @@ exports.updateMyProfile = async (req, res) => {
       concerns,
       gender,
       hourlyRate,
-      documentsUrl,
       experience,
       fullLegalName,
       licenseNumber,
@@ -105,7 +131,6 @@ exports.updateMyProfile = async (req, res) => {
         ...(hourlyRate !== undefined && {
           hourlyRate: hourlyRate === null || hourlyRate === '' ? null : Number(hourlyRate),
         }),
-        ...(documentsUrl !== undefined && { documentsUrl }),
         ...(experience !== undefined && { experience }),
         ...(fullLegalName !== undefined && { fullLegalName }),
         ...(licenseNumber !== undefined && { licenseNumber }),
@@ -150,9 +175,12 @@ exports.verifySpecialist = async (req, res) => {
 exports.getSpecialistById = async (req, res) => {
   try {
     const { id } = req.params;
+    // Так само публічний ендпоінт — role потрібна лише для перевірки
+    // нижче, її не включаємо в PUBLIC_SPECIALIST_SELECT.
     const specialist = await prisma.specialistProfile.findUnique({
       where: { id },
-      include: {
+      select: {
+        ...PUBLIC_SPECIALIST_SELECT,
         user: { select: { firstName: true, lastName: true, role: true } },
       },
     });
@@ -168,7 +196,9 @@ exports.getSpecialistById = async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' });
   }
 };
-// GET /api/specialists/me — власний профіль спеціаліста
+
+// GET /api/specialists/me — власний профіль спеціаліста. documentsUrl тут —
+// короткочасні підписані посилання на R2, не самі ключі.
 exports.getMyProfile = async (req, res) => {
   try {
     const profile = await prisma.specialistProfile.findUnique({
@@ -177,7 +207,10 @@ exports.getMyProfile = async (req, res) => {
     if (!profile) {
       return res.status(404).json({ message: 'Профіль спеціаліста не знайдено' });
     }
-    res.status(200).json(profile);
+    const documentsUrl = await Promise.all(
+      profile.documentsUrl.map((key) => getPresignedUrl(key))
+    );
+    res.status(200).json({ ...profile, documentsUrl });
   } catch (error) {
     console.error('❌ Помилка отримання власного профілю:', error);
     res.status(500).json({ message: 'Помилка сервера' });
@@ -219,17 +252,8 @@ const SCREENING_RESPONSE_SCHEMA = {
   ],
 };
 
-function mimeFromExt(filename) {
-  const ext = path.extname(filename).toLowerCase();
-  if (ext === '.png') return 'image/png';
-  if (ext === '.webp') return 'image/webp';
-  if (ext === '.pdf') return 'application/pdf';
-  return 'image/jpeg';
-}
-
-async function screenDocument(filePath, fullLegalName) {
-  const mimeType = mimeFromExt(filePath);
-  const data = fs.readFileSync(filePath).toString('base64');
+async function screenDocument(buffer, mimeType, fullLegalName) {
+  const data = buffer.toString('base64');
 
   const contentPart =
     mimeType === 'application/pdf'
@@ -257,7 +281,10 @@ async function screenDocument(filePath, fullLegalName) {
   return JSON.parse(interaction.output_text);
 }
 
-// POST /api/specialists/me/documents — завантаження документів + AI-скринінг
+// POST /api/specialists/me/documents — завантаження документів + AI-скринінг.
+// Файли ніколи не торкаються диска сервера (multer.memoryStorage) — одразу
+// вивантажуються в R2 як приватні обʼєкти; у БД зберігаються лише їхні
+// ключі (documentsUrl), а не готові URL.
 exports.uploadDocuments = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -271,15 +298,20 @@ exports.uploadDocuments = async (req, res) => {
       return res.status(404).json({ message: 'Профіль спеціаліста не знайдено' });
     }
 
-    const newUrls = req.files.map((f) => `/uploads/specialist-docs/${f.filename}`);
-    const documentsUrl = [...profile.documentsUrl, ...newUrls];
+    const newKeys = await Promise.all(
+      req.files.map((file) =>
+        uploadBuffer(file.buffer, file.mimetype, 'specialist-docs', file.originalname)
+      )
+    );
+    const documentsUrl = [...profile.documentsUrl, ...newKeys];
 
     let aiScreeningStatus = null;
     let aiScreeningNotes = null;
     let aiScreenedAt = null;
 
     try {
-      const result = await screenDocument(req.files[0].path, profile.fullLegalName);
+      const firstFile = req.files[0];
+      const result = await screenDocument(firstFile.buffer, firstFile.mimetype, profile.fullLegalName);
       aiScreenedAt = new Date();
       aiScreeningNotes = result.notes;
       if (!result.readable) {
@@ -314,7 +346,9 @@ exports.uploadDocuments = async (req, res) => {
 };
 
 // POST /api/specialists/me/photo — фото профілю, показується клієнтам публічно.
-// Це НЕ документ верифікації, тому статус підтвердження не чіпаємо.
+// Це НЕ документ верифікації, тому статус підтвердження не чіпаємо. Фото —
+// свідомо публічний файл, тому в БД зберігається готовий постійний R2-URL
+// (не ключ), на відміну від приватних donations/specialist-docs.
 exports.uploadPhoto = async (req, res) => {
   try {
     if (!req.file) {
@@ -328,7 +362,13 @@ exports.uploadPhoto = async (req, res) => {
       return res.status(404).json({ message: 'Профіль спеціаліста не знайдено' });
     }
 
-    const photoUrl = `/uploads/specialist-photos/${req.file.filename}`;
+    const key = await uploadBuffer(
+      req.file.buffer,
+      req.file.mimetype,
+      'specialist-photos',
+      req.file.originalname
+    );
+    const photoUrl = getPublicUrl(key);
 
     const updated = await prisma.specialistProfile.update({
       where: { userId: req.dbUser.id },

@@ -1,11 +1,10 @@
 const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
 const prisma = require("../prisma");
 const { createNotification } = require("../utils/notificationHelper");
 const { getGeminiClient } = require("../utils/geminiClient");
 const { fetchJarStatement } = require("../utils/monobankClient");
 const { getPaymentCode } = require("../utils/paymentCode");
+const { uploadBuffer, getPresignedUrl } = require("../utils/r2Client");
 
 const DONATION_SCREENING_MODEL = "gemini-3.7-flash";
 
@@ -52,17 +51,8 @@ const DONATION_SCREENING_RESPONSE_SCHEMA = {
   ],
 };
 
-function mimeFromExt(filename) {
-  const ext = path.extname(filename).toLowerCase();
-  if (ext === ".png") return "image/png";
-  if (ext === ".webp") return "image/webp";
-  if (ext === ".pdf") return "application/pdf";
-  return "image/jpeg";
-}
-
-async function screenDonationProof(filePath, claimedAmount, fundraiserName) {
-  const mimeType = mimeFromExt(filePath);
-  const data = fs.readFileSync(filePath).toString("base64");
+async function screenDonationProof(buffer, mimeType, claimedAmount, fundraiserName) {
+  const data = buffer.toString("base64");
 
   const contentPart =
     mimeType === "application/pdf"
@@ -282,6 +272,10 @@ exports.createDonation = async (req, res) => {
 // пробуємо звірити з банком (переказ міг з'явитись у виписці пізніше) —
 // якщо вдалось, донат підтверджується автоматично й без AI; якщо ні, скрін
 // проходить AI-скринінг і лишається на ручну перевірку спеціаліста/адміна.
+//
+// Файл ніколи не торкається диска сервера (multer.memoryStorage) — одразу
+// вивантажується в R2 як приватний обʼєкт, доступ до якого дає лише
+// короткочасне підписане посилання (getPendingDonations нижче).
 exports.attachDonationProof = async (req, res) => {
   try {
     const { id } = req.params;
@@ -296,39 +290,38 @@ exports.attachDonationProof = async (req, res) => {
     });
 
     if (!donation) {
-      fs.unlink(req.file.path, () => {});
       return res.status(404).json({ message: "Донат не знайдено" });
     }
     if (donation.session.clientId !== req.dbUser.id) {
-      fs.unlink(req.file.path, () => {});
       return res.status(403).json({ message: "Це не ваш донат" });
     }
     if (donation.status !== "PENDING") {
-      fs.unlink(req.file.path, () => {});
       return res.status(409).json({ message: "Цей донат вже опрацьовано" });
     }
     if (donation.proofUrl) {
-      fs.unlink(req.file.path, () => {});
       return res.status(409).json({ message: "Скрін для цього донату вже додано" });
     }
 
-    const proofUrl = `/uploads/donations/${req.file.filename}`;
-    const proofHash = crypto
-      .createHash("sha256")
-      .update(fs.readFileSync(req.file.path))
-      .digest("hex");
+    const proofHash = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
 
     // Той самий жорсткий захист, що й раніше — той самий файл не можна
-    // використати повторно для іншого донату.
+    // використати повторно для іншого донату. Рахуємо хеш ДО вивантаження
+    // в R2, щоб не займати сховище файлом, який все одно буде відхилено.
     const existingByHash = await prisma.donation.findUnique({
       where: { proofHash },
     });
     if (existingByHash) {
-      fs.unlink(req.file.path, () => {});
       return res.status(409).json({
         message: "Цей файл підтвердження вже використовувався для іншого донату",
       });
     }
+
+    const proofUrl = await uploadBuffer(
+      req.file.buffer,
+      req.file.mimetype,
+      "donations",
+      req.file.originalname
+    );
 
     // Повторна спроба звірки з банком — переказ міг з'явитись у виписці
     // вже після початкової подачі заяви на донат.
@@ -349,7 +342,8 @@ exports.attachDonationProof = async (req, res) => {
 
     try {
       const result = await screenDonationProof(
-        req.file.path,
+        req.file.buffer,
+        req.file.mimetype,
         donation.amount,
         donation.fundraiser.name
       );
@@ -455,7 +449,9 @@ exports.attachDonationProof = async (req, res) => {
   }
 };
 
-// GET /api/donations/pending — список донатів, що очікують підтвердження
+// GET /api/donations/pending — список донатів, що очікують підтвердження.
+// proofUrl у відповіді — короткочасне підписане посилання на R2 (не сам
+// ключ), тому кожен запит цього ендпоінта генерує свіже посилання.
 exports.getPendingDonations = async (req, res) => {
   try {
     const user = req.dbUser;
@@ -489,7 +485,14 @@ exports.getPendingDonations = async (req, res) => {
       orderBy: { createdAt: "asc" },
     });
 
-    res.status(200).json(donations);
+    const withPresignedUrls = await Promise.all(
+      donations.map(async (donation) => ({
+        ...donation,
+        proofUrl: donation.proofUrl ? await getPresignedUrl(donation.proofUrl) : null,
+      }))
+    );
+
+    res.status(200).json(withPresignedUrls);
   } catch (error) {
     console.error("❌ Помилка отримання донатів:", error);
     res.status(500).json({ message: "Помилка сервера" });

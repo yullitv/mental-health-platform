@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { API_BASE_URL } from "../../api/config";
 import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
 import { DONATION_AI_STATUS_LABELS } from "../../constants/donationVerification";
 
@@ -128,7 +128,7 @@ const AdminPage = () => {
                 <div className="flex items-center gap-3">
                   {specialist.photoUrl ? (
                     <img
-                      src={`${SERVER_ORIGIN}${specialist.photoUrl}`}
+                      src={specialist.photoUrl}
                       alt=""
                       className="w-10 h-10 rounded-full object-cover border border-border shrink-0"
                     />
@@ -202,7 +202,7 @@ const AdminPage = () => {
                     {specialist.documentsUrl.map((url, i) => (
                       <a
                         key={url}
-                        href={url.startsWith("http") ? url : `${SERVER_ORIGIN}${url}`}
+                        href={url}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm font-semibold text-primary hover:underline"
@@ -278,11 +278,7 @@ const AdminPage = () => {
               </p>
               {donation.proofUrl ? (
                 <a
-                  href={
-                    donation.proofUrl?.startsWith("http")
-                      ? donation.proofUrl
-                      : `${SERVER_ORIGIN}${donation.proofUrl}`
-                  }
+                  href={donation.proofUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="text-sm font-semibold text-primary hover:underline"

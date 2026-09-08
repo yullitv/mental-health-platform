@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../../context/CurrentUserContext";
-import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { API_BASE_URL } from "../../api/config";
 import AvailabilityManager from "../../components/dashboard/AvailabilityManager";
 import { DONATION_AI_STATUS_LABELS } from "../../constants/donationVerification";
 
@@ -164,11 +164,7 @@ const DashboardPage = () => {
                   </p>
                   {donation.proofUrl ? (
                     <a
-                      href={
-                        donation.proofUrl?.startsWith("http")
-                          ? donation.proofUrl
-                          : `${SERVER_ORIGIN}${donation.proofUrl}`
-                      }
+                      href={donation.proofUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="text-sm font-semibold text-primary hover:underline"
