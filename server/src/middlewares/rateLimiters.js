@@ -1,4 +1,5 @@
 const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 
 // Базовий захист усього /api від скрапінгу/спаму — досить щедрий, щоб не
 // заважати звичайному використанню застосунку.
@@ -20,7 +21,10 @@ const aiLimiter = rateLimit({
   limit: 15,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.dbUser?.id || req.ip,
+  // req.ip самостійно не годиться як ключ для IPv6 — express-rate-limit
+  // вимагає нормалізувати його через ipKeyGenerator (інакше користувач
+  // міг би обходити ліміт, змінюючи молодші біти своєї IPv6-адреси).
+  keyGenerator: (req) => req.dbUser?.id || ipKeyGenerator(req.ip),
   message: { message: "Забагато AI-запитів поспіль. Спробуй за кілька хвилин." },
 });
 
