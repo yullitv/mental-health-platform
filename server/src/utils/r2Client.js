@@ -49,7 +49,9 @@ function getPublicUrl(key) {
 // документи верифікації спеціаліста). Посилання діє обмежений час, тому
 // його не можна зберегти і використовувати повторно пізніше — саме це
 // закриває "security by obscurity" діру, яка була з публічною /uploads.
-async function getPresignedUrl(key, expiresInSeconds = 300) {
+// Година — свідомий компроміс: адмін/спеціаліст переглядає чергу заявок
+// не миттєво, а 5 хвилин виявились закороткими для реального перегляду.
+async function getPresignedUrl(key, expiresInSeconds = 3600) {
   if (!key) return null;
   const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key });
   return getSignedUrl(r2Client, command, { expiresIn: expiresInSeconds });
