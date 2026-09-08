@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { API_BASE_URL } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
 const CONCERN_LABELS = {
@@ -100,7 +100,7 @@ const SpecialistDetailPage = () => {
       <div className="flex items-center gap-4 mb-4">
         {specialist.photoUrl ? (
           <img
-            src={`${SERVER_ORIGIN}${specialist.photoUrl}`}
+            src={specialist.photoUrl}
             alt=""
             className="w-16 h-16 rounded-full object-cover border border-border shrink-0"
           />

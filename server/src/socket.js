@@ -1,12 +1,13 @@
 const { Server } = require("socket.io");
 const { verifyToken } = require("@clerk/express");
 const prisma = require("./prisma");
+const { allowedOrigins } = require("./corsConfig");
 
 let io;
 
 function initSocket(httpServer) {
   io = new Server(httpServer, {
-    cors: { origin: "*" },
+    cors: { origin: allowedOrigins },
   });
 
   io.use(async (socket, next) => {
@@ -32,8 +33,25 @@ function initSocket(httpServer) {
   io.on("connection", (socket) => {
     socket.join(`user:${socket.dbUser.id}`);
 
-    socket.on("joinSession", (sessionId) => {
-      socket.join(`session:${sessionId}`);
+    // Перевіряємо, що юзер справді клієнт чи спеціаліст цієї сесії —
+    // інакше будь-хто автентифікований міг би підписатись на кімнату
+    // чужої сесії, підібравши sessionId, і читати чат у реальному часі.
+    socket.on("joinSession", async (sessionId) => {
+      try {
+        const session = await prisma.session.findUnique({
+          where: { id: sessionId },
+          include: { specialist: true },
+        });
+        if (!session) return;
+
+        const isClient = session.clientId === socket.dbUser.id;
+        const isSpecialist = session.specialist.userId === socket.dbUser.id;
+        if (!isClient && !isSpecialist) return;
+
+        socket.join(`session:${sessionId}`);
+      } catch (error) {
+        console.error("❌ Помилка приєднання до кімнати сесії:", error);
+      }
     });
 
     socket.on("leaveSession", (sessionId) => {

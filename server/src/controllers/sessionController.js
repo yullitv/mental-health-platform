@@ -24,6 +24,18 @@ exports.bookSlot = async (req, res) => {
         throw { status: 400, message: "Не можна забронювати слот у минулому" };
       }
 
+      // Умовний UPDATE замість "прочитати, потім записати": якщо хтось
+      // інший встиг забронювати той самий слот між перевіркою вище і цим
+      // моментом, updateMany оновить 0 рядків — і ми відкотимо бронювання
+      // замість того, щоб створити дві сесії на один слот.
+      const { count } = await tx.availabilitySlot.updateMany({
+        where: { id: slotId, isBooked: false },
+        data: { isBooked: true },
+      });
+      if (count === 0) {
+        throw { status: 409, message: "Цей слот вже заброньовано" };
+      }
+
       const newSession = await tx.session.create({
         data: {
           clientId: req.dbUser.id,
@@ -33,11 +45,6 @@ exports.bookSlot = async (req, res) => {
           status: "CREATED",
           slotId: slot.id,
         },
-      });
-
-      await tx.availabilitySlot.update({
-        where: { id: slot.id },
-        data: { isBooked: true },
       });
 
       return newSession;

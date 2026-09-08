@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { API_BASE_URL } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
 // Той самий список, що й у профілі спеціаліста ("з чим працюєш") — щоб
@@ -255,7 +255,7 @@ const SpecialistsPage = () => {
             <div className="flex items-center gap-3">
               {s.photoUrl ? (
                 <img
-                  src={`${SERVER_ORIGIN}${s.photoUrl}`}
+                  src={s.photoUrl}
                   alt=""
                   className="w-12 h-12 rounded-full object-cover border border-border shrink-0"
                 />

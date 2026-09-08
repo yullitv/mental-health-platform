@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { API_BASE_URL, SERVER_ORIGIN } from "../../api/config";
+import { API_BASE_URL } from "../../api/config";
 import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
 
 // Той самий список, що клієнт бачив в анкеті ("з чим працює") — тепер
@@ -253,7 +253,7 @@ const SpecialistProfileEditPage = () => {
         <div className="flex items-center gap-4">
           {profile?.photoUrl ? (
             <img
-              src={`${SERVER_ORIGIN}${profile.photoUrl}`}
+              src={profile.photoUrl}
               alt="Фото профілю"
               className="w-20 h-20 rounded-full object-cover border border-border"
             />
@@ -408,7 +408,7 @@ const SpecialistProfileEditPage = () => {
             {profile.documentsUrl.map((url, i) => (
               <a
                 key={url}
-                href={`${SERVER_ORIGIN}${url}`}
+                href={url}
                 target="_blank"
                 rel="noreferrer"
                 className="text-sm font-semibold text-primary hover:underline"
