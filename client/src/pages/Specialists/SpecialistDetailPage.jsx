@@ -22,6 +22,9 @@ const formatSlot = (iso) =>
     minute: "2-digit",
   });
 
+const formatReviewDate = (iso) =>
+  new Date(iso).toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit", year: "numeric" });
+
 const SpecialistDetailPage = () => {
   const { id } = useParams();
   const { getToken } = useAuth();
@@ -32,6 +35,7 @@ const SpecialistDetailPage = () => {
 
   const [specialist, setSpecialist] = useState(null);
   const [slots, setSlots] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [bookingSlotId, setBookingSlotId] = useState(null);
@@ -39,15 +43,17 @@ const SpecialistDetailPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [specialistRes, slotsRes] = await Promise.all([
+        const [specialistRes, slotsRes, reviewsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/specialists/${id}`),
           fetch(`${API_BASE_URL}/availability/${id}`),
+          fetch(`${API_BASE_URL}/reviews/specialist/${id}`),
         ]);
 
         if (!specialistRes.ok) throw new Error("Спеціаліста не знайдено");
 
         setSpecialist(await specialistRes.json());
         setSlots(slotsRes.ok ? await slotsRes.json() : []);
+        setReviews(reviewsRes.ok ? await reviewsRes.json() : []);
       } catch (err) {
         console.error("❌ Помилка завантаження:", err);
         setError("Не вдалось завантажити дані спеціаліста.");
@@ -115,6 +121,14 @@ const SpecialistDetailPage = () => {
           </h2>
           {specialist.hourlyRate && (
             <p className="text-muted">{specialist.hourlyRate} грн / сесія</p>
+          )}
+          {specialist.reviewsCount > 0 && (
+            <p className="text-sm font-semibold text-ink mt-1">
+              ⭐ {specialist.averageRating}{" "}
+              <span className="text-muted font-normal">
+                ({specialist.reviewsCount} {specialist.reviewsCount === 1 ? "відгук" : "відгуки"})
+              </span>
+            </p>
           )}
         </div>
       </div>
@@ -185,6 +199,29 @@ const SpecialistDetailPage = () => {
         >
           Зареєструватись і забронювати
         </Link>
+      )}
+
+      <h3 className="font-bold text-ink mt-8 mb-2">Відгуки</h3>
+      {reviews.length === 0 ? (
+        <p className="text-muted">Поки що немає відгуків.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {reviews.map((review) => (
+            <div
+              key={review.id}
+              className="bg-canvas border border-border rounded-xl px-4 py-3"
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-semibold text-ink">
+                  {"⭐".repeat(review.rating)}
+                  <span className="text-muted"> {review.client?.firstName || "Клієнт"}</span>
+                </span>
+                <span className="text-xs text-muted">{formatReviewDate(review.createdAt)}</span>
+              </div>
+              {review.comment && <p className="text-ink text-sm">{review.comment}</p>}
+            </div>
+          ))}
+        </div>
       )}
 
       {error && <p className="text-red-500 text-sm mt-4">{error}</p>}

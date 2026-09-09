@@ -301,9 +301,21 @@ const SpecialistsPage = () => {
                 ))}
               </div>
             )}
-            {s.hourlyRate != null && (
-              <p className="text-sm text-muted mt-3">{s.hourlyRate} грн / сесія</p>
-            )}
+            <div className="flex items-center justify-between mt-3">
+              {s.hourlyRate != null ? (
+                <p className="text-sm text-muted">{s.hourlyRate} грн / сесія</p>
+              ) : (
+                <span />
+              )}
+              {s.reviewsCount > 0 ? (
+                <p className="text-sm text-ink font-semibold">
+                  ⭐ {s.averageRating}{" "}
+                  <span className="text-muted font-normal">({s.reviewsCount})</span>
+                </p>
+              ) : (
+                <p className="text-xs text-muted">Ще немає відгуків</p>
+              )}
+            </div>
           </Link>
         ))}
       </div>

@@ -12,7 +12,24 @@ const PUBLIC_SPECIALIST_SELECT = {
   photoUrl: true,
   experience: true,
   user: { select: { firstName: true, lastName: true } },
+  // Лише оцінки (без коментарів/авторів) — щоб порахувати середній рейтинг
+  // і кількість відгуків, не роздуваючи публічний список/картку зайвими
+  // даними. Повний текст відгуків — окремо, через /api/reviews/specialist/:id.
+  reviews: { select: { rating: true } },
 };
+
+// Додає averageRating/reviewsCount і прибирає "сирий" масив reviews з
+// публічної відповіді — клієнту потрібне лише підсумкове число.
+function withRatingSummary(specialist) {
+  const { reviews, ...rest } = specialist;
+  const ratings = reviews || [];
+  const reviewsCount = ratings.length;
+  const averageRating =
+    reviewsCount > 0
+      ? Math.round((ratings.reduce((sum, r) => sum + r.rating, 0) / reviewsCount) * 10) / 10
+      : null;
+  return { ...rest, averageRating, reviewsCount };
+}
 
 // GET /api/specialists — публічний список підтверджених спеціалістів.
 // Фільтр по user.role — захист від "осиротілого" SpecialistProfile: якщо
@@ -28,7 +45,7 @@ exports.getApprovedSpecialists = async (req, res) => {
       where: { verificationStatus: 'APPROVED', user: { role: 'SPECIALIST' } },
       select: PUBLIC_SPECIALIST_SELECT,
     });
-    res.status(200).json(specialists);
+    res.status(200).json(specialists.map(withRatingSummary));
   } catch (error) {
     console.error('❌ Помилка отримання спеціалістів:', error);
     res.status(500).json({ message: 'Помилка сервера' });
@@ -190,7 +207,7 @@ exports.getSpecialistById = async (req, res) => {
     }
     delete specialist.user.role;
 
-    res.status(200).json(specialist);
+    res.status(200).json(withRatingSummary(specialist));
   } catch (error) {
     console.error('❌ Помилка отримання спеціаліста:', error);
     res.status(500).json({ message: 'Помилка сервера' });
