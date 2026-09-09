@@ -118,7 +118,11 @@ const CompanionPage = () => {
       const data = await res.json();
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: data.reply, crisisDetected: data.crisisDetected },
+        {
+          role: "assistant",
+          text: data.reply,
+          crisisDetected: data.crisisDetected,
+        },
       ]);
     } catch {
       setError("Щось пішло не так. Спробуй ще раз.");
@@ -142,15 +146,16 @@ const CompanionPage = () => {
   return (
     <div className="max-w-2xl mx-auto text-left space-y-6">
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h2 className="text-2xl font-extrabold text-ink mb-2">
-          AI-розмова
-        </h2>
+        <h2 className="text-2xl font-extrabold text-ink mb-2">AI-розмова</h2>
         <p className="text-sm text-muted">
           Простір поговорити прямо зараз. Це не заміна психотерапевта чи{" "}
-          <Link to="/specialists" className="text-primary font-semibold hover:underline">
+          <Link
+            to="/specialists"
+            className="text-primary font-semibold hover:underline"
+          >
             спеціаліста
           </Link>
-          , а швидка підтримка між сесіями. Розмова НЕ зберігається — після
+          , а швидка підтримка між сесіями. Розмова НЕ зберігається - після
           виходу зі сторінки вона зникає.
         </p>
       </div>
@@ -167,16 +172,21 @@ const CompanionPage = () => {
             }
             className="mt-1 w-4 h-4 accent-primary"
           />
-          <label htmlFor="diary-opt-in" className="text-sm text-ink cursor-pointer">
+          <label
+            htmlFor="diary-opt-in"
+            className="text-sm text-ink cursor-pointer"
+          >
             <span className="font-semibold">
               Дозволити AI бачити мої останні записи щоденника
             </span>{" "}
-            {diaryLoading && <span className="text-muted">(завантаження…)</span>}
+            {diaryLoading && (
+              <span className="text-muted">(завантаження…)</span>
+            )}
             <p className="text-xs text-muted mt-1">
               Записи розшифровуються ТІЛЬКИ в твоєму браузері й на час цієї
-              розмови виходять за межі шифрування — надсилаються сервісу
-              Google Gemini, щоб AI міг спиратись на контекст. Вони НЕ
-              зберігаються на сервері. За замовчуванням вимкнено.
+              розмови виходять за межі шифрування - надсилаються сервісу Google
+              Gemini, щоб AI міг спиратись на контекст. Вони НЕ зберігаються на
+              сервері. За замовчуванням вимкнено.
             </p>
           </label>
         </div>
@@ -231,7 +241,10 @@ const CompanionPage = () => {
                   </a>
                 ))}
               </div>
-              <Link to="/crisis" className="text-sm font-semibold text-danger hover:underline">
+              <Link
+                to="/crisis"
+                className="text-sm font-semibold text-danger hover:underline"
+              >
                 Відкрити повноцінний екран підтримки →
               </Link>
             </div>
@@ -267,7 +280,9 @@ const CompanionPage = () => {
       <form onSubmit={handleSend} className="flex flex-col gap-2">
         <textarea
           value={draft}
-          onChange={(e) => setDraft(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
+          onChange={(e) =>
+            setDraft(e.target.value.slice(0, MAX_MESSAGE_LENGTH))
+          }
           onKeyDown={handleKeyDown}
           rows={2}
           placeholder="Напиши, що на думці…"
@@ -299,9 +314,12 @@ const CompanionPage = () => {
       </form>
 
       <p className="text-xs text-muted text-center">
-        Це не екстрена допомога. Якщо життю загрожує безпосередня небезпека —
+        Це не екстрена допомога. Якщо життю загрожує безпосередня небезпека -
         телефонуй 112 або{" "}
-        <Link to="/crisis" className="text-primary font-semibold hover:underline">
+        <Link
+          to="/crisis"
+          className="text-primary font-semibold hover:underline"
+        >
           відкрий екран підтримки
         </Link>
         .

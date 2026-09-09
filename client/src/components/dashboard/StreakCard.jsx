@@ -5,7 +5,7 @@ import { computeStreakStats, streakMessage } from "../../utils/streak";
 
 // Гейміфікація без тиску: жодних "розбитих" стріків червоним, жодного
 // порівняння з іншими. Пропущений день просто нейтрального кольору в
-// стрічці нижче — не хрестик, не попередження. Найдовша серія лишається
+// стрічці нижче - не хрестик, не попередження. Найдовша серія лишається
 // видимою як досягнення, навіть коли поточна перервалась.
 const StreakCard = () => {
   const { getToken } = useAuth();
@@ -30,7 +30,7 @@ const StreakCard = () => {
         const dates = [...diary, ...screening].map((e) => e.date);
         if (!cancelled) setStats(computeStreakStats(dates));
       } catch {
-        // Віджет — доповнення до кабінету, не критичний шлях; тихо
+        // Віджет - доповнення до кабінету, не критичний шлях; тихо
         // ігноруємо збій замість показу помилки.
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -81,9 +81,7 @@ const StreakCard = () => {
             key={day.key}
             title={day.key}
             className={`w-6 h-6 rounded-full ${
-              day.active
-                ? "bg-primary"
-                : "bg-canvas border border-border"
+              day.active ? "bg-primary" : "bg-canvas border border-border"
             }`}
           />
         ))}

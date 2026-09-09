@@ -110,7 +110,7 @@ const SafetyPlanPage = () => {
       if (!res.ok) throw new Error();
       setSaveNotice("Збережено.");
     } catch {
-      setSaveNotice("Не вдалось зберегти — спробуй ще раз.");
+      setSaveNotice("Не вдалось зберегти - спробуй ще раз.");
     } finally {
       setIsSaving(false);
     }
@@ -150,7 +150,10 @@ const SafetyPlanPage = () => {
   };
 
   const removePlaylist = (index) => {
-    savePlan({ ...plan, playlists: plan.playlists.filter((_, i) => i !== index) });
+    savePlan({
+      ...plan,
+      playlists: plan.playlists.filter((_, i) => i !== index),
+    });
   };
 
   const addContact = () => {
@@ -169,7 +172,10 @@ const SafetyPlanPage = () => {
   };
 
   const removeContact = (index) => {
-    savePlan({ ...plan, contacts: plan.contacts.filter((_, i) => i !== index) });
+    savePlan({
+      ...plan,
+      contacts: plan.contacts.filter((_, i) => i !== index),
+    });
   };
 
   const isEmpty =
@@ -191,9 +197,9 @@ const SafetyPlanPage = () => {
         </h2>
         <p className="text-sm text-muted">
           Персональний список того, що повертає тебе до стабільного стану.
-          Заповни її зараз, поки все спокійно, — щоб у важку хвилину не
-          довелось нічого вигадувати. Все шифрується тим самим ключем, що й
-          щоденник — сервер не бачить вмісту.
+          Заповни її зараз, поки все спокійно, - щоб у важку хвилину не довелось
+          нічого вигадувати. Все шифрується тим самим ключем, що й щоденник -
+          сервер не бачить вмісту.
         </p>
         {plan.simpleActions.length + plan.memories.length > 0 && (
           <Link
@@ -209,9 +215,8 @@ const SafetyPlanPage = () => {
 
       {isEmpty && !loadError && (
         <p className="text-sm text-muted bg-primary-soft rounded-xl p-4">
-          Аптечка поки порожня. Додай хоча б кілька пунктів у будь-якому
-          розділі нижче — навіть один-два вже можуть допомогти в потрібний
-          момент.
+          Аптечка поки порожня. Додай хоча б кілька пунктів у будь-якому розділі
+          нижче - навіть один-два вже можуть допомогти в потрібний момент.
         </p>
       )}
 

@@ -83,7 +83,7 @@ model SpecialistProfile {
   bio                String?
   specializations    String[]           // Підходи в роботі: "КПТ", "Гештальт"
   concerns           String[]           // З чим працює (той самий список, що й в анкеті клієнта): "anxiety", "stress"...
-  gender             String?            // Стать спеціаліста: "female" | "male" — для фільтра клієнта
+  gender             String?            // Стать спеціаліста: "female" | "male" - для фільтра клієнта
   hourlyRate         Int?               // Рекомендований донат
   verificationStatus VerificationStatus @default(PENDING)
   documentsUrl       String[]           // Посилання на дипломи/сертифікати
@@ -98,7 +98,7 @@ model SpecialistProfile {
   aiScreenedAt       DateTime?
 
   photoUrl           String?            // Фото профілю, показується клієнтам публічно
-  experience         String?            @db.Text // Досвід роботи — вільний текст (роки/опис)
+  experience         String?            @db.Text // Досвід роботи - вільний текст (роки/опис)
 
   sessions           Session[]          @relation("SpecialistSessions")
 
@@ -121,7 +121,7 @@ model Session {
 
   specialistNotes String?           // Приватні нотатки (E2EE шифрування)
 
-  // НОВЕ: замість вільного donationUrl — звʼязок з конкретним фондом
+  // НОВЕ: замість вільного donationUrl - звʼязок з конкретним фондом
   fundraiserId    String?
   fundraiser      Fundraiser?       @relation(fields: [fundraiserId], references: [id])
 
@@ -150,8 +150,8 @@ model Fundraiser {
   isActive      Boolean    @default(true)
 
   // ID банки в Monobank Open API (не URL, а саме id з /personal/client-info)
-  // — якщо заповнено, донати на цей фонд додатково звіряються з реальною
-  // випискою банки через MONOBANK_JAR_TOKEN. Необов'язкове — не всі фонди
+  // - якщо заповнено, донати на цей фонд додатково звіряються з реальною
+  // випискою банки через MONOBANK_JAR_TOKEN. Необов'язкове - не всі фонди
   // мають таку інтеграцію.
   monobankJarId String?
 
@@ -171,13 +171,13 @@ model Donation {
   fundraiserId  String
   fundraiser    Fundraiser     @relation(fields: [fundraiserId], references: [id])
 
-  amount        Float?         // Сума, заявлена клієнтом (обов'язкова на рівні API — див. createDonation)
+  amount        Float?         // Сума, заявлена клієнтом (обов'язкова на рівні API - див. createDonation)
   // Скріншот-підтвердження донату. Опційний: спершу пробуємо підтвердити
-  // донат автоматично через реальну виписку банки (checkBankConfirmation) —
+  // донат автоматично через реальну виписку банки (checkBankConfirmation) -
   // скрін потрібен лише як запасний варіант, коли банк не підтвердив одразу.
   proofUrl      String?
-  // SHA-256 вмісту файлу — жорсткий захист від повторного використання
-  // того самого скріна для іншого донату (унікальний, але nullable —
+  // SHA-256 вмісту файлу - жорсткий захист від повторного використання
+  // того самого скріна для іншого донату (унікальний, але nullable -
   // щоб не ламати міграцію на існуючих рядках без хешу).
   proofHash     String?        @unique
   status        DonationStatus @default(PENDING)
@@ -192,14 +192,14 @@ model Donation {
   aiScreenedAt       DateTime?
 
   // Незалежна від AI перевірка: чи знайшовся в реальній виписці банки
-  // (Monobank API) переказ, що збігається за сумою — набагато надійніший
+  // (Monobank API) переказ, що збігається за сумою - набагато надійніший
   // сигнал за читання скріна, доступний лише коли Fundraiser.monobankJarId
-  // заповнено. bankTransactionId унікальний — щоб той самий реальний
+  // заповнено. bankTransactionId унікальний - щоб той самий реальний
   // переказ не підтвердив два різні донати.
   bankConfirmed     Boolean    @default(false)
   bankTransactionId String?    @unique
 
-  // Навмисно НЕ зовнішній ключ (щоб не ускладнювати каскади) —
+  // Навмисно НЕ зовнішній ключ (щоб не ускладнювати каскади) -
   // просто userId того, хто підтвердив (спеціаліст або адмін)
   confirmedById String?
   confirmedAt   DateTime?
@@ -292,7 +292,7 @@ model DiaryEntry {
 }
 
 // Результати скринінг-тестів (PHQ-9 / GAD-7). Той самий підхід E2EE, що й
-// у DiaryEntry, і той самий локальний ключ шифрування — сервер бачить лише
+// у DiaryEntry, і той самий локальний ключ шифрування - сервер бачить лише
 // testKey (яку шкалу проходили) та дату, все інше (бали, відповіді) зашифровано.
 model ScreeningResult {
   id         String   @id @default(cuid())
@@ -306,10 +306,10 @@ model ScreeningResult {
   createdAt  DateTime @default(now())
 }
 
-// "Аптечка ресурсу" (Safety Plan) — персональний список того, що повертає
+// "Аптечка ресурсу" (Safety Plan) - персональний список того, що повертає
 // до стабільного стану: прості дії, спогади, цитати, посилання на плейлисти,
 // довірені контакти. Один запис на користувача (не по днях, як щоденник),
-// той самий підхід E2EE й той самий локальний ключ шифрування — сервер
+// той самий підхід E2EE й той самий локальний ключ шифрування - сервер
 // бачить лише сам факт наявності запису, увесь вміст зашифрований.
 model SafetyPlan {
   id         String   @id @default(cuid())

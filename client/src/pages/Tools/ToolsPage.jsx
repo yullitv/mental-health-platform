@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-// Інструменти самодопомоги — окрема сторінка верхнього меню (раніше жили
+// Інструменти самодопомоги - окрема сторінка верхнього меню (раніше жили
 // всередині "Кабінету", але це окремий, самостійний розділ, тож має свій
 // пункт навігації поряд з "Кабінет"/"Спеціалісти").
 const TOOLS = [
@@ -8,7 +8,7 @@ const TOOLS = [
     to: "/diary",
     icon: "📔",
     label: "Щоденник",
-    desc: "Настрій, сон, нотатки — зашифровано прямо в браузері",
+    desc: "Настрій, сон, нотатки - зашифровано прямо в браузері",
   },
   {
     to: "/thought-analysis",
@@ -52,9 +52,11 @@ const ToolsPage = () => {
   return (
     <div className="max-w-3xl mx-auto text-left">
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h2 className="text-xl font-extrabold text-ink mb-1">Твої інструменти</h2>
+        <h2 className="text-xl font-extrabold text-ink mb-1">
+          Твої інструменти
+        </h2>
         <p className="text-sm text-muted mb-4">
-          Все для самодопомоги між сесіями — приватно і завжди під рукою.
+          Все для самодопомоги між сесіями - приватно і завжди під рукою.
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
           {TOOLS.map((tool) => (

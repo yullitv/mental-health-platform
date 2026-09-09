@@ -17,7 +17,7 @@ async function createNotification({ userId, type, title, message, link }) {
     }
 
     // Email-дублювання сповіщення. Не блокує основний потік (fire-and-forget)
-    // і не ламає нічого при збої — просто лог помилки.
+    // і не ламає нічого при збої - просто лог помилки.
     prisma.user
       .findUnique({ where: { id: userId }, select: { email: true } })
       .then((user) => {

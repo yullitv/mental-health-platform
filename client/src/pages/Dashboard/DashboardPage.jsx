@@ -15,7 +15,7 @@ const STATUS_LABELS = {
 };
 
 // Той самий вікно доступу, що й на сторінці відео-сесії
-// (VideoSessionPage.jsx) — щоб кнопка на дашборді з'являлась саме тоді,
+// (VideoSessionPage.jsx) - щоб кнопка на дашборді з'являлась саме тоді,
 // коли перехід на відео справді спрацює.
 const JOIN_WINDOW_BEFORE_MS = 15 * 60 * 1000;
 const JOIN_WINDOW_AFTER_MS = 15 * 60 * 1000;
@@ -25,7 +25,10 @@ const canJoinVideo = (session) => {
   const now = Date.now();
   const startMs = new Date(session.startTime).getTime();
   const endMs = new Date(session.endTime).getTime();
-  return startMs - JOIN_WINDOW_BEFORE_MS <= now && now <= endMs + JOIN_WINDOW_AFTER_MS;
+  return (
+    startMs - JOIN_WINDOW_BEFORE_MS <= now &&
+    now <= endMs + JOIN_WINDOW_AFTER_MS
+  );
 };
 
 const formatDate = (iso) =>
@@ -57,7 +60,7 @@ const DashboardPage = () => {
   }, []);
 
   const loadData = useCallback(async () => {
-    // Адмін не має власних сесій/донатів як клієнт чи спеціаліст — і не
+    // Адмін не має власних сесій/донатів як клієнт чи спеціаліст - і не
     // має доступу до /sessions/mine на бекенді, тож навіть не питаємо.
     if (!dbUser || dbUser.role === "ADMIN") return;
     try {
@@ -173,7 +176,7 @@ const DashboardPage = () => {
                     </a>
                   ) : (
                     <p className="text-sm text-muted italic">
-                      Клієнт ще не додав скрін — очікуємо або автоматичне
+                      Клієнт ще не додав скрін - очікуємо або автоматичне
                       підтвердження банком, або скрін для ручної перевірки.
                     </p>
                   )}
@@ -185,7 +188,9 @@ const DashboardPage = () => {
                   {donation.aiScreeningStatus && (
                     <p
                       className={`text-xs mt-1 ${
-                        donation.aiScreeningStatus === "OK" ? "text-muted" : "text-accent"
+                        donation.aiScreeningStatus === "OK"
+                          ? "text-muted"
+                          : "text-accent"
                       }`}
                     >
                       {DONATION_AI_STATUS_LABELS[donation.aiScreeningStatus] ||
@@ -195,13 +200,17 @@ const DashboardPage = () => {
                     </p>
                   )}
                   {donation.aiScreeningNotes && (
-                    <p className="text-xs text-muted mt-0.5">{donation.aiScreeningNotes}</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {donation.aiScreeningNotes}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2">
                   {donation.proofUrl && (
                     <button
-                      onClick={() => handleDonationAction(donation.id, "confirm")}
+                      onClick={() =>
+                        handleDonationAction(donation.id, "confirm")
+                      }
                       disabled={busyId === donation.id}
                       className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
                     >

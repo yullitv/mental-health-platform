@@ -33,7 +33,7 @@ function initSocket(httpServer) {
   io.on("connection", (socket) => {
     socket.join(`user:${socket.dbUser.id}`);
 
-    // Перевіряємо, що юзер справді клієнт чи спеціаліст цієї сесії —
+    // Перевіряємо, що юзер справді клієнт чи спеціаліст цієї сесії -
     // інакше будь-хто автентифікований міг би підписатись на кімнату
     // чужої сесії, підібравши sessionId, і читати чат у реальному часі.
     socket.on("joinSession", async (sessionId) => {

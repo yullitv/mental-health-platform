@@ -15,11 +15,11 @@ import {
 const SCALE = [1, 2, 3, 4, 5];
 
 // Web Speech API замість хмарної транскрипції (Gemini/Whisper): аудіо
-// ніколи не потрапляє на наш сервер чи AI-провайдера — розпізнавання
+// ніколи не потрапляє на наш сервер чи AI-провайдера - розпізнавання
 // відбувається в самому браузері, а в щоденник (і далі в шифрування)
 // потрапляє вже готовий текст, так само як при ручному наборі. Це
 // узгоджено з E2EE-моделлю щоденника. Мінус: стабільно працює лише в
-// Chrome/Edge (Chromium) — у Firefox/Safari підтримки нема, тож кнопка
+// Chrome/Edge (Chromium) - у Firefox/Safari підтримки нема, тож кнопка
 // диктування там просто не показується.
 const SpeechRecognitionAPI =
   typeof window !== "undefined"
@@ -95,7 +95,7 @@ const METRIC_PAIRS = [
 ];
 
 // Генерує текстові інсайти на основі кореляцій, порівнянь сну і трендів.
-// Усе рахується виключно на РОЗШИФРОВАНИХ записах у браузері — сервер
+// Усе рахується виключно на РОЗШИФРОВАНИХ записах у браузері - сервер
 // цих даних ніколи не бачить.
 function generateInsights(entries) {
   const insights = [];
@@ -164,7 +164,7 @@ function generateInsights(entries) {
     });
   }
 
-  // 4. Позначки "що вплинуло" — чи повторюється патерн при певному факторі
+  // 4. Позначки "що вплинуло" - чи повторюється патерн при певному факторі
   const withFactors = entries.filter(
     (e) => Array.isArray(e.factors) && e.factors.length > 0,
   );
@@ -271,8 +271,12 @@ function buildWeekSummary(entries) {
     }
   }
 
-  const anxietyVals = recent.filter((e) => e.anxiety != null).map((e) => e.anxiety);
-  const sleepVals = recent.filter((e) => e.sleepHours != null).map((e) => e.sleepHours);
+  const anxietyVals = recent
+    .filter((e) => e.anxiety != null)
+    .map((e) => e.anxiety);
+  const sleepVals = recent
+    .filter((e) => e.sleepHours != null)
+    .map((e) => e.sleepHours);
 
   return {
     best,
@@ -293,7 +297,7 @@ const PERIOD_OPTIONS = [
 
 function filterByPeriod(entries, period) {
   if (period === "all") return entries;
-  const days = { "7": 7, "30": 30, "90": 90 }[period];
+  const days = { 7: 7, 30: 30, 90: 90 }[period];
   const cutoff = new Date();
   cutoff.setHours(0, 0, 0, 0);
   cutoff.setDate(cutoff.getDate() - (days - 1));
@@ -408,7 +412,7 @@ const DiaryChart = ({ entries, metrics, onHover, onSelect }) => {
 };
 
 // Екран, що з'являється, коли в браузері немає ключа, а в БД вже є
-// зашифровані записи (наприклад, новий пристрій) — потрібно ввести
+// зашифровані записи (наприклад, новий пристрій) - потрібно ввести
 // існуючий ключ або свідомо почати щоденник заново.
 const KeyGate = ({ onImport, onReset, error, isChecking }) => {
   const [value, setValue] = useState("");
@@ -445,12 +449,12 @@ const KeyGate = ({ onImport, onReset, error, isChecking }) => {
           onClick={onReset}
           className="px-4 py-2 rounded-xl text-sm font-semibold bg-canvas border border-border text-ink hover:border-primary transition"
         >
-          У мене немає ключа — почати заново
+          У мене немає ключа - почати заново
         </button>
       </div>
       <p className="text-xs text-muted">
-        "Почати заново" створить новий ключ. Старі записи залишаться в базі,
-        але без правильного ключа їх більше не можна буде прочитати.
+        "Почати заново" створить новий ключ. Старі записи залишаться в базі, але
+        без правильного ключа їх більше не можна буде прочитати.
       </p>
     </div>
   );
@@ -470,12 +474,12 @@ const KeyBackupBanner = ({ encryptionKey, onDismiss }) => {
   };
 
   return (
-    <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 space-y-3">
+    <div className="bg-accent-soft border border-accent/40 rounded-2xl p-5 space-y-3">
       <h3 className="text-base font-extrabold text-ink">
         🔑 Збережи свій ключ шифрування
       </h3>
       <p className="text-sm text-ink">
-        Записи щоденника шифруються прямо в браузері — навіть ми не можемо їх
+        Записи щоденника шифруються прямо в браузері - навіть ми не можемо їх
         прочитати. Але це означає, що без цього ключа записи не відкриються на
         іншому пристрої чи в іншому браузері. Збережи його в надійному місці
         (наприклад, менеджер паролів).
@@ -496,7 +500,7 @@ const KeyBackupBanner = ({ encryptionKey, onDismiss }) => {
           onClick={onDismiss}
           className="px-4 py-2 rounded-xl text-sm font-semibold bg-canvas border border-border text-ink hover:border-primary transition"
         >
-          Я зберегла, приховати
+          Я зберіг(-ла), приховати
         </button>
       </div>
     </div>
@@ -521,7 +525,7 @@ function arrayBufferToBase64(buffer) {
 }
 
 // Реєструє шрифт Manrope (він же бренд-шрифт застосунку) у jsPDF, щоб
-// кирилиця в PDF відображалась коректно — дефолтні шрифти jsPDF (Helvetica
+// кирилиця в PDF відображалась коректно - дефолтні шрифти jsPDF (Helvetica
 // тощо) кириличних гліфів не мають взагалі.
 async function registerCyrillicFont(doc) {
   const response = await fetch("/fonts/Manrope-Variable.ttf");
@@ -534,7 +538,7 @@ async function registerCyrillicFont(doc) {
 }
 
 // Формує сам PDF-документ зі списку РОЗШИФРОВАНИХ записів (усе рахується
-// вже в браузері — jsPDF ніколи не бачить нічого, крім готового тексту).
+// вже в браузері - jsPDF ніколи не бачить нічого, крім готового тексту).
 function renderDiaryReportPdf(doc, entries, rangeLabel) {
   const margin = 40;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -556,16 +560,20 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
   doc.setFont("Manrope", "normal");
   doc.setFontSize(18);
   doc.setTextColor(...primary);
-  doc.text("Опора — звіт щоденника самопочуття", margin, y);
+  doc.text("Опора - звіт щоденника самопочуття", margin, y);
   y += 22;
 
   doc.setFontSize(10);
   doc.setTextColor(...muted);
   const todayLabel = new Date().toLocaleDateString("uk-UA");
-  doc.text(`Період: ${rangeLabel} · Сформовано: ${todayLabel} · Записів: ${entries.length}`, margin, y);
+  doc.text(
+    `Період: ${rangeLabel} · Сформовано: ${todayLabel} · Записів: ${entries.length}`,
+    margin,
+    y,
+  );
   y += 14;
   const wrappedDisclaimer = doc.splitTextToSize(
-    "Звіт згенеровано локально в браузері з розшифрованих записів — сервер Опори не має доступу до цього вмісту. Це самозвіт клієнта, а не діагностика; призначений як матеріал для розмови зі спеціалістом.",
+    "Звіт згенеровано локально в браузері з розшифрованих записів - сервер Опори не має доступу до цього вмісту. Це самозвіт клієнта, а не діагностика; призначений як матеріал для розмови зі спеціалістом.",
     contentWidth,
   );
   doc.text(wrappedDisclaimer, margin, y);
@@ -587,7 +595,9 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
     doc.text(`${average(vals).toFixed(1)} / 5`, margin + 110, y);
     y += 14;
   }
-  const sleepVals = entries.filter((e) => e.sleepHours != null).map((e) => e.sleepHours);
+  const sleepVals = entries
+    .filter((e) => e.sleepHours != null)
+    .map((e) => e.sleepHours);
   if (sleepVals.length > 0) {
     doc.setTextColor(...muted);
     doc.text("Сон:", margin, y);
@@ -597,7 +607,7 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
   }
   y += 10;
 
-  // Помічені закономірності — той самий генератор, що на сторінці, лише
+  // Помічені закономірності - той самий генератор, що на сторінці, лише
   // порахований саме для записів обраного періоду.
   const periodInsights = generateInsights(entries);
   if (periodInsights.length > 0) {
@@ -633,8 +643,9 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
       month: "2-digit",
       year: "numeric",
     });
-    const metricsLine = CHART_METRIC_OPTIONS
-      .filter(({ key }) => entry[key] != null)
+    const metricsLine = CHART_METRIC_OPTIONS.filter(
+      ({ key }) => entry[key] != null,
+    )
       .map(({ key, label }) => `${label} ${entry[key]}/5`)
       .join("   ");
     doc.text(dateLabel, margin, y);
@@ -646,7 +657,9 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
 
     if (Array.isArray(entry.factors) && entry.factors.length > 0) {
       doc.setTextColor(...muted);
-      const factorsText = entry.factors.map((f) => FACTOR_LABELS[f] ?? f).join(", ");
+      const factorsText = entry.factors
+        .map((f) => FACTOR_LABELS[f] ?? f)
+        .join(", ");
       doc.text(`Що вплинуло: ${factorsText}`, margin + 12, y);
       y += 12;
     }
@@ -690,7 +703,11 @@ const DiaryPage = () => {
   const recognitionRef = useRef(null);
   const [factors, setFactors] = useState([]);
   const [chartPeriod, setChartPeriod] = useState("30");
-  const [chartMetrics, setChartMetrics] = useState(["mood", "energy", "anxiety"]);
+  const [chartMetrics, setChartMetrics] = useState([
+    "mood",
+    "energy",
+    "anxiety",
+  ]);
   const [hoveredEntry, setHoveredEntry] = useState(null);
   const [reflectionState, setReflectionState] = useState("idle");
   const [reflectionText, setReflectionText] = useState("");
@@ -882,7 +899,7 @@ const DiaryPage = () => {
   };
 
   // Зупиняємо диктування, якщо компонент розмонтовується (перехід на іншу
-  // сторінку) — інакше розпізнавання й доступ до мікрофона лишились б жити.
+  // сторінку) - інакше розпізнавання й доступ до мікрофона лишились б жити.
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop();
@@ -909,14 +926,21 @@ const DiaryPage = () => {
         }
       }
       if (finalChunk.trim()) {
-        setNote((prev) => (prev ? `${prev} ${finalChunk.trim()}` : finalChunk.trim()));
+        setNote((prev) =>
+          prev ? `${prev} ${finalChunk.trim()}` : finalChunk.trim(),
+        );
       }
       setInterimTranscript(interim);
     };
 
     recognition.onerror = (event) => {
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        setVoiceError("Немає доступу до мікрофона — дозволь його для цього сайту.");
+      if (
+        event.error === "not-allowed" ||
+        event.error === "service-not-allowed"
+      ) {
+        setVoiceError(
+          "Немає доступу до мікрофона - дозволь його для цього сайту.",
+        );
       } else if (event.error !== "no-speech" && event.error !== "aborted") {
         setVoiceError("Розпізнавання мовлення не вдалось.");
       }
@@ -982,7 +1006,10 @@ const DiaryPage = () => {
     [entries],
   );
 
-  const insights = useMemo(() => generateInsights(validEntries), [validEntries]);
+  const insights = useMemo(
+    () => generateInsights(validEntries),
+    [validEntries],
+  );
 
   const handleExportPdf = async () => {
     setPdfError("");
@@ -1076,7 +1103,7 @@ const DiaryPage = () => {
                   <div>
                     <p className="text-xs text-muted">{label}</p>
                     <p className="text-sm font-bold text-ink">
-                      {todaySummary.today[key] ?? "—"}/5
+                      {todaySummary.today[key] ?? "-"}/5
                     </p>
                   </div>
                 </div>
@@ -1084,7 +1111,7 @@ const DiaryPage = () => {
             </div>
           ) : (
             <p className="text-sm text-muted mb-3">
-              Сьогодні ще немає запису — заповни форму нижче.
+              Сьогодні ще немає запису - заповни форму нижче.
             </p>
           )}
 
@@ -1342,7 +1369,7 @@ const DiaryPage = () => {
         )}
         {!isLoading && validEntries.length >= 2 && chartEntries.length < 2 && (
           <p className="text-muted">
-            За цей період замало записів — вибери довший період.
+            За цей період замало записів - вибери довший період.
           </p>
         )}
         {!isLoading && chartEntries.length >= 2 && (
@@ -1408,15 +1435,15 @@ const DiaryPage = () => {
               </div>
             ))}
             <p className="text-xs text-muted">
-              Виявлено на основі {validEntries.length} записів. Це
-              статистична закономірність, а не причинно-наслідковий зв'язок.
+              Виявлено на основі {validEntries.length} записів. Це статистична
+              закономірність, а не причинно-наслідковий зв'язок.
             </p>
           </div>
         )}
         {insights.length === 0 && validEntries.length >= 2 && (
           <p className="text-sm text-muted mt-3">
-            Ще недостатньо даних для помітних закономірностей — веди
-            щоденник регулярніше, і тут з'являться інсайти.
+            Ще недостатньо даних для помітних закономірностей - веди щоденник
+            регулярніше, і тут з'являться інсайти.
           </p>
         )}
       </div>
@@ -1427,7 +1454,7 @@ const DiaryPage = () => {
         </h3>
         <p className="text-sm text-muted mb-4">
           PDF з динамікою показників, закономірностями й записами за обраний
-          період — щоб було зручніше обговорити зі своїм спеціалістом.
+          період - щоб було зручніше обговорити зі своїм спеціалістом.
           Формується прямо в браузері з розшифрованих даних, сервер його не
           бачить.
         </p>
@@ -1457,7 +1484,9 @@ const DiaryPage = () => {
           disabled={pdfStatus === "generating" || validEntries.length === 0}
           className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition disabled:opacity-50"
         >
-          {pdfStatus === "generating" ? "Формую PDF..." : "Завантажити PDF-звіт"}
+          {pdfStatus === "generating"
+            ? "Формую PDF..."
+            : "Завантажити PDF-звіт"}
         </button>
       </div>
 
@@ -1520,8 +1549,8 @@ const DiaryPage = () => {
             <>
               <p className="text-sm text-muted mb-3">
                 Gemini прочитає твої оцінки та нотатки за останні 7 днів і
-                напише один короткий підсумок людською мовою. Це не діагноз і
-                не заміна фахівця — лише погляд збоку.
+                напише один короткий підсумок людською мовою. Це не діагноз і не
+                заміна фахівця - лише погляд збоку.
               </p>
               <button
                 type="button"
@@ -1534,12 +1563,12 @@ const DiaryPage = () => {
           )}
 
           {reflectionState === "confirm" && (
-            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+            <div className="bg-accent-soft border border-accent/40 rounded-xl p-4 space-y-3">
               <p className="text-sm text-ink">
-                ⚠️ На відміну від решти щоденника, цей крок розшифрує нотатки
-                за останні 7 днів і надішле їх до AI-сервісу (Google Gemini)
-                для аналізу. Дані не зберігаються після відповіді, але
-                тимчасово покидають твій браузер.
+                ⚠️ На відміну від решти щоденника, цей крок розшифрує нотатки за
+                останні 7 днів і надішле їх до AI-сервісу (Google Gemini) для
+                аналізу. Дані не зберігаються після відповіді, але тимчасово
+                покидають твій браузер.
               </p>
               <div className="flex gap-3">
                 <button
@@ -1595,7 +1624,9 @@ const DiaryPage = () => {
       )}
 
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h3 className="text-xl font-extrabold text-ink mb-4">Історія записів</h3>
+        <h3 className="text-xl font-extrabold text-ink mb-4">
+          Історія записів
+        </h3>
         {!isLoading && entries.length === 0 && (
           <p className="text-muted">Записів поки немає.</p>
         )}
@@ -1615,7 +1646,8 @@ const DiaryPage = () => {
               >
                 {entry.decryptFailed ? (
                   <p className="text-sm text-muted">
-                    {formatDate(entry.date)} — 🔒 не вдалося розшифрувати (інший ключ)
+                    {formatDate(entry.date)} - 🔒 не вдалося розшифрувати (інший
+                    ключ)
                   </p>
                 ) : (
                   <>
@@ -1632,7 +1664,9 @@ const DiaryPage = () => {
                     <div className="flex flex-wrap gap-3 text-sm shrink-0">
                       <span>😐 {entry.mood}/5</span>
                       {entry.energy != null && <span>⚡ {entry.energy}/5</span>}
-                      {entry.anxiety != null && <span>😰 {entry.anxiety}/5</span>}
+                      {entry.anxiety != null && (
+                        <span>😰 {entry.anxiety}/5</span>
+                      )}
                       {entry.sleepHours != null && (
                         <span>💤 {entry.sleepHours} год</span>
                       )}

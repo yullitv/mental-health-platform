@@ -2,7 +2,7 @@ const prisma = require("../prisma");
 
 const MAX_CIPHERTEXT_LENGTH = 10000;
 
-// GET /api/safety-plan/mine — один запис на користувача (не по днях).
+// GET /api/safety-plan/mine - один запис на користувача (не по днях).
 // Розшифровка відбувається виключно на клієнті ключем, якого сервер не має.
 exports.getMine = async (req, res) => {
   try {
@@ -16,8 +16,8 @@ exports.getMine = async (req, res) => {
   }
 };
 
-// PUT /api/safety-plan — повне збереження (upsert) зашифрованої аптечки.
-// Сервер НЕ бачить прості дії/спогади/цитати/контакти у відкритому вигляді —
+// PUT /api/safety-plan - повне збереження (upsert) зашифрованої аптечки.
+// Сервер НЕ бачить прості дії/спогади/цитати/контакти у відкритому вигляді -
 // вони зашифровані на клієнті (AES-GCM), тут лише opaque-блоб cipherText.
 exports.upsert = async (req, res) => {
   try {

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
-// Той самий список, що й у профілі спеціаліста ("з чим працюєш") — щоб
+// Той самий список, що й у профілі спеціаліста ("з чим працюєш") - щоб
 // теги на фільтрі й на картці спеціаліста читались однаково.
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
@@ -43,7 +43,8 @@ const SpecialistsPage = () => {
     const fetchSpecialists = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/specialists`);
-        if (!response.ok) throw new Error("Не вдалось завантажити спеціалістів");
+        if (!response.ok)
+          throw new Error("Не вдалось завантажити спеціалістів");
         const data = await response.json();
         setSpecialists(data);
       } catch (err) {
@@ -57,18 +58,22 @@ const SpecialistsPage = () => {
     fetchSpecialists();
   }, []);
 
-  // Підходи в роботі (specializations) — вільний текст, який спеціаліст
-  // вписує сам ("КПТ", "Гештальт"). З чим працює (concerns) — той самий
+  // Підходи в роботі (specializations) - вільний текст, який спеціаліст
+  // вписує сам ("КПТ", "Гештальт"). З чим працює (concerns) - той самий
   // контрольований список, що й у профілі спеціаліста / раніше в анкеті.
   const allApproaches = useMemo(() => {
     const set = new Set();
-    specialists.forEach((s) => (s.specializations || []).forEach((tag) => set.add(tag)));
+    specialists.forEach((s) =>
+      (s.specializations || []).forEach((tag) => set.add(tag)),
+    );
     return Array.from(set).sort();
   }, [specialists]);
 
   const allConcerns = useMemo(() => {
     const set = new Set();
-    specialists.forEach((s) => (s.concerns || []).forEach((tag) => set.add(tag)));
+    specialists.forEach((s) =>
+      (s.concerns || []).forEach((tag) => set.add(tag)),
+    );
     return Array.from(set);
   }, [specialists]);
 
@@ -102,8 +107,10 @@ const SpecialistsPage = () => {
       }
       if (genderFilter && s.gender !== genderFilter) return false;
       if (query) {
-        const name = `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
-        const haystack = `${name} ${s.bio || ""} ${s.experience || ""}`.toLowerCase();
+        const name =
+          `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
+        const haystack =
+          `${name} ${s.bio || ""} ${s.experience || ""}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
       return true;
@@ -113,13 +120,22 @@ const SpecialistsPage = () => {
       const withRate = result.filter((s) => s.hourlyRate != null);
       const withoutRate = result.filter((s) => s.hourlyRate == null);
       withRate.sort((a, b) =>
-        sortOrder === "price_asc" ? a.hourlyRate - b.hourlyRate : b.hourlyRate - a.hourlyRate,
+        sortOrder === "price_asc"
+          ? a.hourlyRate - b.hourlyRate
+          : b.hourlyRate - a.hourlyRate,
       );
       return [...withRate, ...withoutRate];
     }
 
     return result;
-  }, [specialists, search, activeApproaches, activeConcerns, genderFilter, sortOrder]);
+  }, [
+    specialists,
+    search,
+    activeApproaches,
+    activeConcerns,
+    genderFilter,
+    sortOrder,
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto text-left">
@@ -164,7 +180,9 @@ const SpecialistsPage = () => {
 
           {hasGenderData && (
             <div>
-              <p className="text-xs font-semibold text-muted mb-1.5">Стать спеціаліста</p>
+              <p className="text-xs font-semibold text-muted mb-1.5">
+                Стать спеціаліста
+              </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -197,7 +215,9 @@ const SpecialistsPage = () => {
 
           {allConcerns.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-muted mb-1.5">З чим працює</p>
+              <p className="text-xs font-semibold text-muted mb-1.5">
+                З чим працює
+              </p>
               <div className="flex flex-wrap gap-2">
                 {allConcerns.map((tag) => (
                   <button
@@ -219,7 +239,9 @@ const SpecialistsPage = () => {
 
           {allApproaches.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-muted mb-1.5">Підходи в роботі</p>
+              <p className="text-xs font-semibold text-muted mb-1.5">
+                Підходи в роботі
+              </p>
               <div className="flex flex-wrap gap-2">
                 {allApproaches.map((tag) => (
                   <button
@@ -241,9 +263,12 @@ const SpecialistsPage = () => {
         </div>
       )}
 
-      {!isLoading && !error && specialists.length > 0 && filteredSpecialists.length === 0 && (
-        <p className="text-muted">Нічого не знайдено за цим фільтром.</p>
-      )}
+      {!isLoading &&
+        !error &&
+        specialists.length > 0 &&
+        filteredSpecialists.length === 0 && (
+          <p className="text-muted">Нічого не знайдено за цим фільтром.</p>
+        )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {filteredSpecialists.map((s) => (
@@ -269,13 +294,19 @@ const SpecialistsPage = () => {
                   {s.user?.firstName} {s.user?.lastName}
                 </p>
                 {s.gender && (
-                  <p className="text-xs text-muted">{GENDER_LABELS[s.gender] || s.gender}</p>
+                  <p className="text-xs text-muted">
+                    {GENDER_LABELS[s.gender] || s.gender}
+                  </p>
                 )}
               </div>
             </div>
-            {s.bio && <p className="text-muted text-sm mt-3 line-clamp-3">{s.bio}</p>}
+            {s.bio && (
+              <p className="text-muted text-sm mt-3 line-clamp-3">{s.bio}</p>
+            )}
             {s.experience && (
-              <p className="text-muted text-sm mt-1 line-clamp-2">{s.experience}</p>
+              <p className="text-muted text-sm mt-1 line-clamp-2">
+                {s.experience}
+              </p>
             )}
             {s.concerns?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
@@ -310,7 +341,9 @@ const SpecialistsPage = () => {
               {s.reviewsCount > 0 ? (
                 <p className="text-sm text-ink font-semibold">
                   ⭐ {s.averageRating}{" "}
-                  <span className="text-muted font-normal">({s.reviewsCount})</span>
+                  <span className="text-muted font-normal">
+                    ({s.reviewsCount})
+                  </span>
                 </p>
               ) : (
                 <p className="text-xs text-muted">Ще немає відгуків</p>
