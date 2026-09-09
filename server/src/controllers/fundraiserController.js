@@ -1,39 +1,49 @@
-const prisma = require('../prisma');
+const prisma = require("../prisma");
 
-// GET /api/fundraisers — публічний список активних фондів (для вибору під час донату)
+// GET /api/fundraisers - публічний список активних фондів (для вибору під час донату)
 exports.getActiveFundraisers = async (req, res) => {
   try {
     const fundraisers = await prisma.fundraiser.findMany({
       where: { isActive: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.status(200).json(fundraisers);
   } catch (error) {
-    console.error('❌ Помилка отримання фондів:', error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error("❌ Помилка отримання фондів:", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };
 
-// GET /api/fundraisers/admin — усі фонди (активні й неактивні), лише для адміна
+// GET /api/fundraisers/admin - усі фонди (активні й неактивні), лише для адміна
 exports.getAllFundraisers = async (req, res) => {
   try {
     const fundraisers = await prisma.fundraiser.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.status(200).json(fundraisers);
   } catch (error) {
-    console.error('❌ Помилка отримання фондів (admin):', error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error("❌ Помилка отримання фондів (admin):", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };
 
-// POST /api/fundraisers — створення нового фонду, лише адмін
+// POST /api/fundraisers - створення нового фонду, лише адмін
 exports.createFundraiser = async (req, res) => {
   try {
-    const { name, description, bankJarUrl, category, logoUrl, isVerified, monobankJarId } = req.body;
+    const {
+      name,
+      description,
+      bankJarUrl,
+      category,
+      logoUrl,
+      isVerified,
+      monobankJarId,
+    } = req.body;
 
     if (!name || !bankJarUrl) {
-      return res.status(400).json({ message: "Поля 'name' та 'bankJarUrl' обов'язкові" });
+      return res
+        .status(400)
+        .json({ message: "Поля 'name' та 'bankJarUrl' обов'язкові" });
     }
 
     const fundraiser = await prisma.fundraiser.create({
@@ -50,21 +60,29 @@ exports.createFundraiser = async (req, res) => {
 
     res.status(201).json(fundraiser);
   } catch (error) {
-    console.error('❌ Помилка створення фонду:', error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error("❌ Помилка створення фонду:", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };
 
-// PUT /api/fundraisers/:id — редагування (включно з isActive/isVerified), лише адмін
+// PUT /api/fundraisers/:id - редагування (включно з isActive/isVerified), лише адмін
 exports.updateFundraiser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, bankJarUrl, category, logoUrl, isVerified, isActive, monobankJarId } =
-      req.body;
+    const {
+      name,
+      description,
+      bankJarUrl,
+      category,
+      logoUrl,
+      isVerified,
+      isActive,
+      monobankJarId,
+    } = req.body;
 
     const existing = await prisma.fundraiser.findUnique({ where: { id } });
     if (!existing) {
-      return res.status(404).json({ message: 'Фонд не знайдено' });
+      return res.status(404).json({ message: "Фонд не знайдено" });
     }
 
     const fundraiser = await prisma.fundraiser.update({
@@ -77,13 +95,15 @@ exports.updateFundraiser = async (req, res) => {
         ...(logoUrl !== undefined && { logoUrl }),
         ...(isVerified !== undefined && { isVerified }),
         ...(isActive !== undefined && { isActive }),
-        ...(monobankJarId !== undefined && { monobankJarId: monobankJarId || null }),
+        ...(monobankJarId !== undefined && {
+          monobankJarId: monobankJarId || null,
+        }),
       },
     });
 
     res.status(200).json(fundraiser);
   } catch (error) {
-    console.error('❌ Помилка оновлення фонду:', error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error("❌ Помилка оновлення фонду:", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };

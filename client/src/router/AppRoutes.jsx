@@ -33,7 +33,7 @@ const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
 
         {/* Публічно доступно і без реєстрації: перегляд спеціалістів (без
-            бронювання) і кризова підтримка — гарячі лінії не можуть
+            бронювання) і кризова підтримка - гарячі лінії не можуть
             залежати від того, чи встигла людина зареєструватись. */}
         <Route path="/specialists" element={<SpecialistsPage />} />
         <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
@@ -51,7 +51,10 @@ const AppRoutes = () => {
           </Route>
 
           <Route element={<RoleRoute allow={["SPECIALIST"]} />}>
-            <Route path="/specialist-profile" element={<SpecialistProfileEditPage />} />
+            <Route
+              path="/specialist-profile"
+              element={<SpecialistProfileEditPage />}
+            />
           </Route>
 
           <Route element={<RoleRoute allow={["CLIENT"]} />}>

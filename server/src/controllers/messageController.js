@@ -27,7 +27,7 @@ async function getSessionWithAccessCheck(sessionId, dbUser) {
   return session;
 }
 
-// POST /api/messages — надіслати повідомлення
+// POST /api/messages - надіслати повідомлення
 exports.sendMessage = async (req, res) => {
   try {
     const { sessionId, content } = req.body;
@@ -77,7 +77,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// GET /api/messages/:sessionId — отримати всі повідомлення сесії
+// GET /api/messages/:sessionId - отримати всі повідомлення сесії
 exports.getSessionMessages = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -103,7 +103,7 @@ exports.getSessionMessages = async (req, res) => {
   }
 };
 
-// PUT /api/messages/:id — редагувати власне повідомлення
+// PUT /api/messages/:id - редагувати власне повідомлення
 exports.editMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,7 +150,7 @@ exports.editMessage = async (req, res) => {
   }
 };
 
-// DELETE /api/messages/:id — видалити власне повідомлення (м'яке видалення)
+// DELETE /api/messages/:id - видалити власне повідомлення (м'яке видалення)
 exports.deleteMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +190,7 @@ exports.deleteMessage = async (req, res) => {
   }
 };
 
-// PUT /api/messages/:sessionId/read — позначити чужі повідомлення як прочитані
+// PUT /api/messages/:sessionId/read - позначити чужі повідомлення як прочитані
 exports.markAsRead = async (req, res) => {
   try {
     const { sessionId } = req.params;

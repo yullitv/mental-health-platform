@@ -39,7 +39,7 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Файли (фото спеціалістів, донат-скріни, документи верифікації) тепер
-// зберігаються в Cloudflare R2, а не на диску сервера — окремий статичний
+// зберігаються в Cloudflare R2, а не на диску сервера - окремий статичний
 // роут /uploads більше не потрібен (server/src/utils/r2Client.js).
 
 // Тепер це запрацює!
@@ -64,7 +64,6 @@ app.use("/api/screening", screeningRoutes);
 app.use("/api/companion", companionRoutes);
 app.use("/api/safety-plan", safetyPlanRoutes);
 
-
 app.get("/", (req, res) => {
   res.send("Mental Health API with Clerk Express is running...");
 });
@@ -75,7 +74,7 @@ app.use("/api", (req, res) => {
   res.status(404).json({ message: "Маршрут не знайдено" });
 });
 
-// Загальний обробник помилок — підстраховка на випадок, якщо якийсь
+// Загальний обробник помилок - підстраховка на випадок, якщо якийсь
 // контролер кине помилку повз власний try/catch.
 app.use((err, req, res, next) => {
   console.error("❌ Необроблена помилка:", err);

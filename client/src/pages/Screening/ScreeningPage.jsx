@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
-import {
-  ensureKey,
-  encryptEntry,
-  decryptEntry,
-} from "../../utils/diaryCrypto";
+import { ensureKey, encryptEntry, decryptEntry } from "../../utils/diaryCrypto";
 import {
   SCREENING_TESTS,
   RESPONSE_OPTIONS,
@@ -34,7 +30,7 @@ const ScreeningPage = () => {
   const [saveError, setSaveError] = useState("");
 
   // Історія результатів шифрується тим самим локальним ключем, що й
-  // щоденник (той самий "diary_encryption_key_v1" у localStorage) — так
+  // щоденник (той самий "diary_encryption_key_v1" у localStorage) - так
   // застосунок має один ключ для всіх чутливих даних, які вводить людина.
   const loadHistory = useCallback(
     async (key) => {
@@ -63,7 +59,7 @@ const ScreeningPage = () => {
         );
         setHistory(decrypted);
       } catch {
-        // Історія — доповнення, а не критичний шлях; мовчки ігноруємо збій.
+        // Історія - доповнення, а не критичний шлях; мовчки ігноруємо збій.
       }
     },
     [getToken],
@@ -96,7 +92,9 @@ const ScreeningPage = () => {
     setAnswers((prev) => ({ ...prev, [index]: value }));
   };
 
-  const allAnswered = test ? test.items.every((_, i) => answers[i] != null) : false;
+  const allAnswered = test
+    ? test.items.every((_, i) => answers[i] != null)
+    : false;
 
   const handleSubmit = async () => {
     if (!test || !allAnswered) return;
@@ -127,7 +125,7 @@ const ScreeningPage = () => {
       await loadHistory(encryptionKey);
     } catch {
       setSaveError(
-        "Результат показано, але не вдалось зберегти його в історію — спробуй пізніше.",
+        "Результат показано, але не вдалось зберегти його в історію - спробуй пізніше.",
       );
     }
   };
@@ -163,10 +161,10 @@ const ScreeningPage = () => {
           <p className="text-sm text-muted">
             Короткі стандартизовані опитувальники (PHQ-9, GAD-7), якими
             користуються фахівці для первинної оцінки стану. Це{" "}
-            <strong>скринінг, а не діагностика</strong> — результат не
-            встановлює діагноз і не замінює консультацію спеціаліста.
-            Результати шифруються тим самим локальним ключем, що й
-            щоденник — сервер їх не бачить.
+            <strong>скринінг, а не діагностика</strong> - результат не
+            встановлює діагноз і не замінює консультацію спеціаліста. Результати
+            шифруються тим самим локальним ключем, що й щоденник - сервер їх не
+            бачить.
           </p>
         </div>
 
@@ -221,9 +219,7 @@ const ScreeningPage = () => {
     return (
       <div className="max-w-2xl mx-auto text-left space-y-6">
         <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-          <h2 className="text-xl font-extrabold text-ink mb-2">
-            {test.title}
-          </h2>
+          <h2 className="text-xl font-extrabold text-ink mb-2">{test.title}</h2>
           <p className="text-sm text-muted mb-4">{test.intro}</p>
           <p className="text-sm font-semibold text-ink">{test.timeframe}</p>
         </div>
@@ -295,9 +291,9 @@ const ScreeningPage = () => {
                   Одна з відповідей звернула нашу увагу
                 </h3>
                 <p className="text-sm text-ink mt-1">
-                  Ти зазначила/зазначив думки про те, що краще б тебе не
-                  було, або про заподіяння собі шкоди. Це не має лишатись
-                  наодинці з тобою — поруч є підтримка.
+                  Ти зазначила/зазначив думки про те, що краще б тебе не було,
+                  або про заподіяння собі шкоди. Це не має лишатись наодинці з
+                  тобою - поруч є підтримка.
                 </p>
               </div>
             </div>
@@ -329,10 +325,10 @@ const ScreeningPage = () => {
           {saveError && <p className="text-xs text-muted mb-2">{saveError}</p>}
 
           <p className="text-xs text-muted">
-            Це скринінговий опитувальник, а не діагностичний інструмент. Він
-            не замінює консультацію лікаря чи психотерапевта і не є
-            підставою для самостійного встановлення діагнозу — лише привід
-            звернути увагу на своє самопочуття.
+            Це скринінговий опитувальник, а не діагностичний інструмент. Він не
+            замінює консультацію лікаря чи психотерапевта і не є підставою для
+            самостійного встановлення діагнозу - лише привід звернути увагу на
+            своє самопочуття.
           </p>
         </div>
 

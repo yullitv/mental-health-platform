@@ -9,8 +9,8 @@ const LoginPage = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const navigate = useNavigate();
 
-  // "sign_in" — звичайний вхід; "forgot_email" — вводимо пошту для коду
-  // скидання; "forgot_reset" — вводимо код і новий пароль.
+  // "sign_in" - звичайний вхід; "forgot_email" - вводимо пошту для коду
+  // скидання; "forgot_reset" - вводимо код і новий пароль.
   const [step, setStep] = useState("sign_in");
 
   const [email, setEmail] = useState("");
@@ -119,7 +119,9 @@ const LoginPage = () => {
               />
 
               {error && (
-                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
+                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">
+                  {error}
+                </p>
               )}
 
               <button
@@ -144,7 +146,10 @@ const LoginPage = () => {
 
             <p className="text-sm text-muted text-center mt-3">
               Ще немає акаунту?{" "}
-              <Link to="/register" className="font-semibold text-primary hover:underline">
+              <Link
+                to="/register"
+                className="font-semibold text-primary hover:underline"
+              >
                 Зареєструватись
               </Link>
             </p>
@@ -157,7 +162,7 @@ const LoginPage = () => {
               Відновлення пароля
             </h1>
             <p className="text-sm text-muted mb-6">
-              Введи email, на який зареєстрований акаунт — надішлемо код для
+              Введи email, на який зареєстрований акаунт - надішлемо код для
               скидання пароля.
             </p>
 
@@ -172,7 +177,9 @@ const LoginPage = () => {
               />
 
               {error && (
-                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
+                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">
+                  {error}
+                </p>
               )}
 
               <button
@@ -199,7 +206,9 @@ const LoginPage = () => {
 
         {step === "forgot_reset" && (
           <>
-            <h1 className="text-2xl font-extrabold text-ink mb-1">Новий пароль</h1>
+            <h1 className="text-2xl font-extrabold text-ink mb-1">
+              Новий пароль
+            </h1>
             <p className="text-sm text-muted mb-6">
               Ми надіслали код на <strong className="text-ink">{email}</strong>.
               Введи його разом з новим паролем.
@@ -226,7 +235,9 @@ const LoginPage = () => {
               />
 
               {error && (
-                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
+                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">
+                  {error}
+                </p>
               )}
 
               <button

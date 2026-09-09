@@ -7,13 +7,13 @@ import { useCurrentUser } from "../../context/CurrentUserContext";
 
 const GROUNDING_STEPS = [
   { sense: "5", text: "речей, які ти бачиш навколо" },
-  { sense: "4", text: "речей, яких можеш торкнутися" },
-  { sense: "3", text: "звуків, які чуєш" },
-  { sense: "2", text: "запахів, які відчуваєш" },
+  { sense: "4", text: "речі, яких можеш торкнутися" },
+  { sense: "3", text: "звуки, які чуєш" },
+  { sense: "2", text: "запахи, які відчуваєш" },
   { sense: "1", text: "смак, який відчуваєш зараз" },
 ];
 
-// Окремий, завжди доступний екран підтримки — не прив'язаний до жодної
+// Окремий, завжди доступний екран підтримки - не прив'язаний до жодної
 // конкретної фічі. Відкривається з плаваючої кнопки "Потрібна допомога"
 // на будь-якій сторінці, а також з кризової картки в "Аналізі думки".
 const CrisisPage = () => {
@@ -35,7 +35,7 @@ const CrisisPage = () => {
         const confirmed = sessions.find((s) => s.status === "CONFIRMED");
         if (!cancelled) setActiveSession(confirmed ?? null);
       } catch {
-        // Мовчки ігноруємо — недоступність сесій не має блокувати сторінку допомоги.
+        // Мовчки ігноруємо - недоступність сесій не має блокувати сторінку допомоги.
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -52,11 +52,11 @@ const CrisisPage = () => {
           <span className="text-3xl">🤍</span>
           <div>
             <h2 className="text-xl font-extrabold text-ink">
-              Тобі зараз важко — і це нормально, що ти тут
+              Тобі зараз важко - і це нормально, що ти тут
             </h2>
             <p className="text-sm text-ink mt-1">
-              Нижче — конкретні кроки, які можуть допомогти прямо зараз. Не
-              обов'язково проходити все по порядку — почни з того, що
+              Нижче - конкретні кроки, які можуть допомогти прямо зараз. Не
+              обов'язково проходити все по порядку - почни з того, що
               відгукується найбільше.
             </p>
           </div>
@@ -80,7 +80,7 @@ const CrisisPage = () => {
               <span className="w-8 h-8 rounded-full bg-primary-soft text-primary font-bold flex items-center justify-center shrink-0">
                 {s.sense}
               </span>
-              <p className="text-sm text-ink">Назви подумки {s.text}.</p>
+              <p className="text-sm text-ink">Назви подумки {s.sense} {s.text}.</p>
             </div>
           ))}
         </div>
@@ -100,8 +100,8 @@ const CrisisPage = () => {
             🧰 Твоя аптечка ресурсу
           </h3>
           <p className="text-sm text-muted mb-4">
-            Спогади, дії й люди, які раніше вже допомагали тобі почуватись
-            краще — якщо ти заповнювала її заздалегідь.
+            Спогади, дії й люди, які раніше вже допомагали тобі почуватись краще
+            - якщо ти заповнювала її заздалегідь.
           </p>
           <Link
             to="/safety-plan"
@@ -118,8 +118,7 @@ const CrisisPage = () => {
             💬 Напиши своєму спеціалісту
           </h3>
           <p className="text-sm text-muted mb-4">
-            У тебе є активна сесія з{" "}
-            {activeSession.specialist?.user?.firstName}{" "}
+            У тебе є активна сесія з {activeSession.specialist?.user?.firstName}{" "}
             {activeSession.specialist?.user?.lastName}. Можеш написати прямо
             зараз.
           </p>
@@ -156,8 +155,8 @@ const CrisisPage = () => {
       </div>
 
       <p className="text-xs text-muted text-center">
-        Якщо життю загрожує безпосередня небезпека просто зараз — телефонуй
-        112, не чекаючи.
+        Якщо життю загрожує безпосередня небезпека просто зараз - телефонуй 112,
+        не чекаючи.
       </p>
     </div>
   );

@@ -95,14 +95,14 @@ const PrivacySettingsPage = () => {
         <h2 className="text-2xl font-extrabold text-ink mb-2">Приватність</h2>
         <p className="text-sm text-muted">
           PIN додає короткий екран блокування перед усім застосунком у цьому
-          браузері — щоб ніхто, хто випадково візьме твій телефон чи
-          комп'ютер, одразу не побачив щоденник, тести чи розмову з AI.
+          браузері - щоб ніхто, хто випадково візьме твій телефон чи комп'ютер,
+          одразу не побачив щоденник, тести чи розмову з AI.
         </p>
         <p className="text-xs text-muted mt-2">
-          Це НЕ шифрування і не заміна входу через акаунт — лише швидкий
-          захист від випадкового погляду. PIN діє тільки в цьому браузері й
-          не пов'язаний із ключем шифрування щоденника, тож забутий PIN можна
-          спокійно скинути — жодні дані від цього не постраждають.
+          Це НЕ шифрування і не заміна входу через акаунт - лише швидкий захист
+          від випадкового погляду. PIN діє тільки в цьому браузері й не
+          пов'язаний із ключем шифрування щоденника, тож забутий PIN можна
+          спокійно скинути - жодні дані від цього не постраждають.
         </p>
       </div>
 
@@ -176,7 +176,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Новий PIN (4-6 цифр)"
             value={pin}
-            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setPinValue(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           <input
@@ -184,7 +186,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Повтори PIN"
             value={confirmPin}
-            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           {error && <p className="text-xs text-danger">{error}</p>}
@@ -217,7 +221,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Поточний PIN"
             value={oldPin}
-            onChange={(e) => setOldPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setOldPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           <input
@@ -225,7 +231,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Новий PIN (4-6 цифр)"
             value={pin}
-            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setPinValue(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           <input
@@ -233,7 +241,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Повтори новий PIN"
             value={confirmPin}
-            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           {error && <p className="text-xs text-danger">{error}</p>}
@@ -266,7 +276,9 @@ const PrivacySettingsPage = () => {
             inputMode="numeric"
             placeholder="Поточний PIN"
             value={oldPin}
-            onChange={(e) => setOldPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) =>
+              setOldPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
           />
           {error && <p className="text-xs text-danger">{error}</p>}

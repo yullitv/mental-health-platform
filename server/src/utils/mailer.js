@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 
 async function sendMail({ to, subject, text }) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn("⚠️ EMAIL_USER/EMAIL_PASS не задані — email не надіслано");
+    console.warn("⚠️ EMAIL_USER/EMAIL_PASS не задані - email не надіслано");
     return;
   }
   try {

@@ -16,7 +16,7 @@ const DonationPage = () => {
   const [error, setError] = useState("");
 
   // Заповнюється після подачі заяви на донат, якщо банк одразу не
-  // підтвердив переказ автоматично — тоді показуємо запасний крок:
+  // підтвердив переказ автоматично - тоді показуємо запасний крок:
   // довантажити скрін для ручної перевірки.
   const [pendingDonationId, setPendingDonationId] = useState(null);
   const [proofFile, setProofFile] = useState(null);
@@ -51,7 +51,7 @@ const DonationPage = () => {
       return;
     }
     if (!amount || Number(amount) <= 0) {
-      setError("Вкажи суму донату — вона потрібна для звірки з банком");
+      setError("Вкажи суму донату - вона потрібна для звірки з банком");
       return;
     }
 
@@ -79,7 +79,7 @@ const DonationPage = () => {
       if (data.status === "CONFIRMED") {
         navigate("/dashboard");
       } else {
-        // Банк не підтвердив автоматично — пропонуємо довантажити скрін.
+        // Банк не підтвердив автоматично - пропонуємо довантажити скрін.
         setPendingDonationId(data.id);
       }
     } catch (err) {
@@ -113,7 +113,7 @@ const DonationPage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       const data = await response.json().catch(() => ({}));
@@ -137,7 +137,9 @@ const DonationPage = () => {
   if (proofSent) {
     return (
       <div className="max-w-xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-        <h2 className="text-2xl font-extrabold text-ink mb-2">Скрін надіслано</h2>
+        <h2 className="text-2xl font-extrabold text-ink mb-2">
+          Скрін надіслано
+        </h2>
         <p className="text-muted mb-4">
           Дякуємо! Спеціаліст або адмін перевірить підтвердження вручну, і сесія
           з'явиться в кабінеті після підтвердження.
@@ -159,7 +161,7 @@ const DonationPage = () => {
           Не вдалось підтвердити автоматично
         </h2>
         <p className="text-muted mb-6">
-          Банк поки не знайшов твій переказ у виписці — можливо, він ще не встиг
+          Банк поки не знайшов твій переказ у виписці - можливо, він ще не встиг
           відобразитись, або код у коментарі не збігся. Довантaж скріншот
           підтвердження, щоб спеціаліст або адмін перевірили вручну.
         </p>
@@ -194,11 +196,13 @@ const DonationPage = () => {
 
   return (
     <div className="max-w-xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
-      <h2 className="text-2xl font-extrabold text-ink mb-2">Підтвердження донату</h2>
+      <h2 className="text-2xl font-extrabold text-ink mb-2">
+        Підтвердження донату
+      </h2>
       <p className="text-muted mb-6">
-        Сесія оплачується не спеціалісту напряму, а через донат на благодійну банку.
-        Зроби переказ і натисни кнопку нижче — ми спробуємо підтвердити його
-        автоматично.
+        Сесія оплачується не спеціалісту напряму, а через донат на благодійну
+        банку. Зроби переказ і натисни кнопку нижче - ми спробуємо підтвердити
+        його автоматично.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,14 +225,15 @@ const DonationPage = () => {
           <div className="bg-canvas border border-border rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-                selectedFundraiser.bankJarUrl
+                selectedFundraiser.bankJarUrl,
               )}`}
               alt="QR-код банки фонду"
               className="w-32 h-32 rounded-lg border border-border bg-white p-1 shrink-0"
             />
             <div className="text-center sm:text-left">
               <p className="text-sm text-muted mb-2">
-                Відскануй QR-код або перейди за посиланням, щоб зробити переказ на банку.
+                Відскануй QR-код або перейди за посиланням, щоб зробити переказ
+                на банку.
               </p>
               <a
                 href={selectedFundraiser.bankJarUrl}
@@ -252,14 +257,16 @@ const DonationPage = () => {
               {paymentCode}
             </p>
             <p className="text-xs text-muted mt-1">
-              Це не обов'язково — без коду переказ теж перевірять, просто трохи
+              Це не обов'язково - без коду переказ теж перевірять, просто трохи
               повільніше.
             </p>
           </div>
         )}
 
         <div>
-          <label className="block font-semibold text-ink mb-1">Сума (грн)</label>
+          <label className="block font-semibold text-ink mb-1">
+            Сума (грн)
+          </label>
           <input
             type="number"
             min="1"
@@ -270,8 +277,8 @@ const DonationPage = () => {
             required
           />
           <p className="text-xs text-muted mt-1">
-            Вкажи суму так, як ти її перекажеш — ми звіримо її з реальним переказом
-            у банку.
+            Вкажи суму так, як ти її перекажеш - ми звіримо її з реальним
+            переказом у банку.
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 const prisma = require("../prisma");
 const { createNotification } = require("../utils/notificationHelper");
 
-// POST /api/sessions/book — клієнт бронює слот, створюється сесія
+// POST /api/sessions/book - клієнт бронює слот, створюється сесія
 exports.bookSlot = async (req, res) => {
   try {
     const { slotId } = req.body;
@@ -26,7 +26,7 @@ exports.bookSlot = async (req, res) => {
 
       // Умовний UPDATE замість "прочитати, потім записати": якщо хтось
       // інший встиг забронювати той самий слот між перевіркою вище і цим
-      // моментом, updateMany оновить 0 рядків — і ми відкотимо бронювання
+      // моментом, updateMany оновить 0 рядків - і ми відкотимо бронювання
       // замість того, щоб створити дві сесії на один слот.
       const { count } = await tx.availabilitySlot.updateMany({
         where: { id: slotId, isBooked: false },
@@ -73,7 +73,7 @@ exports.bookSlot = async (req, res) => {
   }
 };
 
-// GET /api/sessions/mine — сесії поточного користувача (як клієнта або спеціаліста)
+// GET /api/sessions/mine - сесії поточного користувача (як клієнта або спеціаліста)
 exports.getMySessions = async (req, res) => {
   try {
     const user = req.dbUser;
@@ -116,8 +116,8 @@ exports.getMySessions = async (req, res) => {
   }
 };
 
-// GET /api/sessions/:id — деталі однієї сесії (наприклад, для сторінки
-// відео-дзвінка) — доступно лише клієнту й спеціалісту саме цієї сесії
+// GET /api/sessions/:id - деталі однієї сесії (наприклад, для сторінки
+// відео-дзвінка) - доступно лише клієнту й спеціалісту саме цієї сесії
 exports.getSessionById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,7 +149,7 @@ exports.getSessionById = async (req, res) => {
   }
 };
 
-// PUT /api/sessions/:id/complete — спеціаліст позначає сесію завершеною
+// PUT /api/sessions/:id/complete - спеціаліст позначає сесію завершеною
 exports.completeSession = async (req, res) => {
   try {
     const { id } = req.params;

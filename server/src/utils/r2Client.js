@@ -1,4 +1,8 @@
-const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 const path = require("path");
@@ -21,7 +25,7 @@ const r2Client = new S3Client({
 });
 
 // Завантажує буфер (з multer.memoryStorage) у R2 під унікальним ключем у
-// вказаній "папці" (префіксі). Повертає сам ключ, а не URL — виклик сам
+// вказаній "папці" (префіксі). Повертає сам ключ, а не URL - виклик сам
 // вирішує, публічний файл чи приватний, і будує потрібний URL окремо
 // (getPublicUrl / getPresignedUrl).
 async function uploadBuffer(buffer, mimeType, folder, originalName = "") {
@@ -33,23 +37,23 @@ async function uploadBuffer(buffer, mimeType, folder, originalName = "") {
       Key: key,
       Body: buffer,
       ContentType: mimeType,
-    })
+    }),
   );
   return key;
 }
 
-// Прямий постійний публічний URL — лише для файлів, які й задумані як
+// Прямий постійний публічний URL - лише для файлів, які й задумані як
 // публічні (фото профілю спеціаліста).
 function getPublicUrl(key) {
   if (!key) return null;
   return `${R2_PUBLIC_URL}/${key}`;
 }
 
-// Короткочасне підписане посилання — для приватних файлів (донат-скріни,
+// Короткочасне підписане посилання - для приватних файлів (донат-скріни,
 // документи верифікації спеціаліста). Посилання діє обмежений час, тому
-// його не можна зберегти і використовувати повторно пізніше — саме це
+// його не можна зберегти і використовувати повторно пізніше - саме це
 // закриває "security by obscurity" діру, яка була з публічною /uploads.
-// Година — свідомий компроміс: адмін/спеціаліст переглядає чергу заявок
+// Година - свідомий компроміс: адмін/спеціаліст переглядає чергу заявок
 // не миттєво, а 5 хвилин виявились закороткими для реального перегляду.
 async function getPresignedUrl(key, expiresInSeconds = 3600) {
   if (!key) return null;

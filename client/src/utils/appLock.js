@@ -1,9 +1,9 @@
-// Локальний PIN-замок застосунку — це ЗАХИСТ ВІД ВИПАДКОВОГО ПОГЛЯДУ
+// Локальний PIN-замок застосунку - це ЗАХИСТ ВІД ВИПАДКОВОГО ПОГЛЯДУ
 // (наприклад, хтось узяв телефон у руки), а НЕ шифрування і не заміна
 // автентифікації Clerk. PIN не бере участі у шифруванні щоденника чи
-// скринінг-тестів (той ключ окремий, живе у diaryCrypto.js) — тому забутий
+// скринінг-тестів (той ключ окремий, живе у diaryCrypto.js) - тому забутий
 // PIN можна просто скинути, без втрати жодних даних. Все зберігається лише
-// в цьому браузері (localStorage для хеша PIN, sessionStorage — для
+// в цьому браузері (localStorage для хеша PIN, sessionStorage - для
 // "розблоковано в цій вкладці").
 
 const HASH_KEY = "opora_pin_hash_v1";
@@ -23,7 +23,10 @@ function randomSaltHex() {
 
 async function hashPin(pin, salt) {
   const enc = new TextEncoder();
-  const digest = await crypto.subtle.digest("SHA-256", enc.encode(`${salt}:${pin}`));
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    enc.encode(`${salt}:${pin}`),
+  );
   return bufToHex(digest);
 }
 

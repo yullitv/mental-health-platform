@@ -5,13 +5,13 @@ import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL } from "../../api/config";
 import { getVideoRoomCredentials } from "../../utils/videoRoom";
 
-// ВАЖЛИВО: публічний meet.jit.si офіційно призначений лише для демонстрації —
+// ВАЖЛИВО: публічний meet.jit.si офіційно призначений лише для демонстрації -
 // будь-який дзвінок, вбудований отак напряму (iframe/External API), Jitsi
 // примусово розриває через 5 хвилин ("Embedding meet.jit.si is only meant
 // for demo purposes"). Для реальних сесій (45-60 хв) це свідомо прийняте
-// обмеження цієї версії — для production знадобиться або платний Jitsi as
+// обмеження цієї версії - для production знадобиться або платний Jitsi as
 // a Service (JWT-автентифікація), або інший провайдер без цього ліміту
-// (наприклад Daily.co — не вимагає реєстрації від учасників, тільки один
+// (наприклад Daily.co - не вимагає реєстрації від учасників, тільки один
 // API-ключ власника застосунку), або власний self-hosted Jitsi-сервер.
 const JITSI_SCRIPT_SRC = "https://meet.jit.si/external_api.js";
 
@@ -24,10 +24,14 @@ function loadJitsiScript() {
       resolve();
       return;
     }
-    const existing = document.querySelector(`script[src="${JITSI_SCRIPT_SRC}"]`);
+    const existing = document.querySelector(
+      `script[src="${JITSI_SCRIPT_SRC}"]`,
+    );
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Не вдалось завантажити Jitsi")));
+      existing.addEventListener("error", () =>
+        reject(new Error("Не вдалось завантажити Jitsi")),
+      );
       return;
     }
     const script = document.createElement("script");
@@ -103,7 +107,8 @@ const VideoSessionPage = () => {
 
         const { roomName, password } = getVideoRoomCredentials(sessionId);
         const displayName =
-          [dbUser?.firstName, dbUser?.lastName].filter(Boolean).join(" ") || "Учасник";
+          [dbUser?.firstName, dbUser?.lastName].filter(Boolean).join(" ") ||
+          "Учасник";
 
         const api = new window.JitsiMeetExternalAPI("meet.jit.si", {
           roomName,
@@ -131,7 +136,9 @@ const VideoSessionPage = () => {
       } catch (err) {
         console.error("❌ Не вдалось завантажити відео-віджет:", err);
         if (!cancelled) {
-          setJitsiError("Не вдалось завантажити відеозв'язок. Спробуй оновити сторінку.");
+          setJitsiError(
+            "Не вдалось завантажити відеозв'язок. Спробуй оновити сторінку.",
+          );
         }
       }
     };
@@ -153,7 +160,10 @@ const VideoSessionPage = () => {
     return (
       <div className="max-w-xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
         <p className="text-red-500 mb-4">{error}</p>
-        <Link to="/dashboard" className="text-primary font-semibold hover:underline">
+        <Link
+          to="/dashboard"
+          className="text-primary font-semibold hover:underline"
+        >
           До кабінету
         </Link>
       </div>
@@ -168,12 +178,15 @@ const VideoSessionPage = () => {
         </h2>
         <p className="text-muted mb-4">
           {session?.status !== "CONFIRMED"
-            ? "Ця сесія ще не підтверджена — відео стане доступним після підтвердження донату."
+            ? "Ця сесія ще не підтверджена - відео стане доступним після підтвердження донату."
             : `Приєднатись можна за 15 хвилин до початку. Запланований час: ${formatDateTime(
-                session.startTime
+                session.startTime,
               )}.`}
         </p>
-        <Link to="/dashboard" className="text-primary font-semibold hover:underline">
+        <Link
+          to="/dashboard"
+          className="text-primary font-semibold hover:underline"
+        >
           До кабінету
         </Link>
       </div>
@@ -184,7 +197,10 @@ const VideoSessionPage = () => {
     <div className="max-w-4xl mx-auto text-left bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-4 flex flex-col h-[80vh]">
       <h2 className="text-xl font-extrabold text-ink mb-2">Відео-сесія</h2>
       {jitsiError && <p className="text-red-500 text-sm mb-2">{jitsiError}</p>}
-      <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden bg-black" />
+      <div
+        ref={containerRef}
+        className="flex-1 rounded-xl overflow-hidden bg-black"
+      />
     </div>
   );
 };

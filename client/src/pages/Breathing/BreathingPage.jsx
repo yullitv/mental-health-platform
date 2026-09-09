@@ -43,7 +43,7 @@ const BreathingPage = () => {
     setStep("setup");
   };
 
-  // Стан для першої фази виставляється тут, у відповідь на клік — це
+  // Стан для першої фази виставляється тут, у відповідь на клік - це
   // звичайний обробник події, а не ефект, тож синхронний setState тут
   // не спричиняє каскадних рендерів.
   const startSession = () => {
@@ -65,7 +65,7 @@ const BreathingPage = () => {
   // Один ефект на всю логіку таймера поточної фази: секундний тік для
   // відображення лічильника і таймаут переходу до наступної фази. Стан для
   // НАСТУПНОЇ фази (і лічильник циклів) виставляється всередині callback'а
-  // таймауту, а не синхронно в тілі ефекту — так React не бачить тут
+  // таймауту, а не синхронно в тілі ефекту - так React не бачить тут
   // каскадного оновлення стану.
   useEffect(() => {
     if (step !== "running" || !exercise) return undefined;
@@ -111,10 +111,13 @@ const BreathingPage = () => {
             Дихальні вправи
           </h2>
           <p className="text-sm text-muted">
-            Короткі техніки дихання, які допомагають тілу заспокоїтись за
-            кілька хвилин. Обери вправу під свій стан — або переглянь усі.
-            Якщо зараз дуже важко і дихання не допомагає,{" "}
-            <Link to="/crisis" className="text-primary font-semibold hover:underline">
+            Короткі техніки дихання, які допомагають тілу заспокоїтись за кілька
+            хвилин. Обери вправу під свій стан - або переглянь усі. Якщо зараз
+            дуже важко і дихання не допомагає,{" "}
+            <Link
+              to="/crisis"
+              className="text-primary font-semibold hover:underline"
+            >
               відкрий екран підтримки
             </Link>
             .
@@ -150,9 +153,7 @@ const BreathingPage = () => {
               <p className="text-xs font-semibold text-primary mb-2">
                 {ex.subtitle}
               </p>
-              <p className="text-sm text-muted mb-4 flex-1">
-                {ex.description}
-              </p>
+              <p className="text-sm text-muted mb-4 flex-1">{ex.description}</p>
               <button
                 type="button"
                 onClick={() => openSetup(ex)}
@@ -164,7 +165,7 @@ const BreathingPage = () => {
           ))}
           {filteredExercises.length === 0 && (
             <p className="text-sm text-muted col-span-2">
-              Для цього стану поки немає підібраних вправ — спробуй інший
+              Для цього стану поки немає підібраних вправ - спробуй інший
               фільтр.
             </p>
           )}
@@ -271,9 +272,7 @@ const BreathingPage = () => {
       <div className="max-w-lg mx-auto text-left space-y-6">
         <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6 text-center">
           <span className="text-4xl">🌿</span>
-          <h2 className="text-xl font-extrabold text-ink mt-3 mb-1">
-            Готово
-          </h2>
+          <h2 className="text-xl font-extrabold text-ink mt-3 mb-1">Готово</h2>
           <p className="text-sm text-muted">
             Ти пройшла/пройшов {targetCycles} циклів вправи «{exercise.title}
             ». Зверни увагу, чи змінилось самопочуття прямо зараз.

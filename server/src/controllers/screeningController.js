@@ -3,8 +3,8 @@ const prisma = require("../prisma");
 const VALID_TEST_KEYS = ["phq9", "gad7"];
 const MAX_CIPHERTEXT_LENGTH = 5000;
 
-// POST /api/screening — зберегти результат скринінг-тесту.
-// Сервер бачить лише testKey (яку шкалу проходили) і дату — бали,
+// POST /api/screening - зберегти результат скринінг-тесту.
+// Сервер бачить лише testKey (яку шкалу проходили) і дату - бали,
 // відповіді та рівень вираженості зашифровані на клієнті тим самим
 // локальним ключем, що й щоденник (AES-GCM, сервер його не має).
 exports.createResult = async (req, res) => {
@@ -32,7 +32,7 @@ exports.createResult = async (req, res) => {
   }
 };
 
-// GET /api/screening/mine — усі зашифровані результати поточного користувача.
+// GET /api/screening/mine - усі зашифровані результати поточного користувача.
 exports.getMyResults = async (req, res) => {
   try {
     const results = await prisma.screeningResult.findMany({
