@@ -34,6 +34,13 @@ const safetyPlanRoutes = require("./routes/safetyPlanRoutes");
 
 const app = express();
 
+// Render (як і більшість хостингів) ставить перед застосунком один
+// reverse proxy, який передає справжню IP-адресу клієнта в X-Forwarded-For.
+// Без цього Express бачить IP самого проксі - і rate limiter рахував би
+// всіх користувачів як одного (express-rate-limit про це й попереджав у
+// логах помилкою ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
