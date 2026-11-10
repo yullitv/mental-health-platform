@@ -17,7 +17,7 @@ export default defineConfig({
       },
       includeAssets: ["favicon-16.png", "favicon-32.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Опора — платформа психологічної підтримки",
+        name: "Опора - платформа психологічної підтримки",
         short_name: "Опора",
         description:
           "Твій персональний простір для емоційного балансу та підтримки.",

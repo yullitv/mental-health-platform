@@ -1,6 +1,6 @@
 const multer = require("multer");
 
-// Пам'ять, а не диск — файл одразу йде в R2 (server/src/utils/r2Client.js).
+// Пам'ять, а не диск - файл одразу йде в R2 (server/src/utils/r2Client.js).
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 const uploadSpecialistDocs = multer({

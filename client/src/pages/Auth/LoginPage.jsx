@@ -9,8 +9,9 @@ const LoginPage = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const navigate = useNavigate();
 
-  // "sign_in" - звичайний вхід; "forgot_email" - вводимо пошту для коду
-  // скидання; "forgot_reset" - вводимо код і новий пароль.
+  // "sign_in" - звичайний вхід; "second_factor" - код з пошти при вході з
+  // нового пристрою (захист Clerk Device Trust); "forgot_email" - вводимо
+  // пошту для коду скидання; "forgot_reset" - вводимо код і новий пароль.
   const [step, setStep] = useState("sign_in");
 
   const [email, setEmail] = useState("");
@@ -20,6 +21,28 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const finishSignIn = async (result) => {
+    await setActive({ session: result.createdSessionId });
+    navigate("/");
+  };
+
+  // Clerk Device Trust: при вході паролем з нового пристрою Clerk вимагає
+  // другий крок - одноразовий код, надісланий на пошту. Без цього кроку
+  // правильний пароль закінчувався загальною помилкою "Не вдалось увійти".
+  const startEmailCodeStep = async (result) => {
+    const emailFactor = result.supportedSecondFactors?.find(
+      (f) => f.strategy === "email_code",
+    );
+    if (!emailFactor) return false;
+    await signIn.prepareSecondFactor({
+      strategy: "email_code",
+      emailAddressId: emailFactor.emailAddressId,
+    });
+    setCode("");
+    setStep("second_factor");
+    return true;
+  };
+
   const handleSignIn = async (e) => {
     e.preventDefault();
     if (!isLoaded) return;
@@ -28,8 +51,13 @@ const LoginPage = () => {
     try {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        navigate("/");
+        await finishSignIn(result);
+      } else if (
+        (result.status === "needs_second_factor" ||
+          result.status === "needs_client_trust") &&
+        (await startEmailCodeStep(result))
+      ) {
+        // Далі - форма введення коду (step "second_factor").
       } else {
         setError("Не вдалось увійти. Перевір, чи все правильно введено.");
       }
@@ -38,6 +66,39 @@ const LoginPage = () => {
       setError(errorMessage(err, "Не вдалось увійти. Перевір email і пароль."));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSecondFactor = async (e) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: "email_code",
+        code: code.trim(),
+      });
+      if (result.status === "complete") {
+        await finishSignIn(result);
+      } else {
+        setError("Код не підійшов. Перевір цифри з листа.");
+      }
+    } catch (err) {
+      console.error("❌ Помилка перевірки коду:", err);
+      setError(errorMessage(err, "Код не підійшов. Спробуй ще раз."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!isLoaded) return;
+    setError("");
+    try {
+      await startEmailCodeStep(signIn);
+    } catch (err) {
+      setError(errorMessage(err, "Не вдалось надіслати код повторно."));
     }
   };
 
@@ -141,7 +202,7 @@ const LoginPage = () => {
               }}
               className="w-full text-sm font-semibold text-primary hover:underline mt-4"
             >
-              Забула пароль?
+              Не пам'ятаєш пароль?
             </button>
 
             <p className="text-sm text-muted text-center mt-3">
@@ -153,6 +214,64 @@ const LoginPage = () => {
                 Зареєструватись
               </Link>
             </p>
+          </>
+        )}
+
+        {step === "second_factor" && (
+          <>
+            <h1 className="text-2xl font-extrabold text-ink mb-1">
+              Підтвердь вхід
+            </h1>
+            <p className="text-sm text-muted mb-6">
+              Схоже, ти входиш з нового пристрою. Ми надіслали код на{" "}
+              <strong className="text-ink">{email}</strong> - введи його, щоб
+              завершити вхід.
+            </p>
+
+            <form onSubmit={handleSecondFactor} className="space-y-3">
+              <input
+                type="text"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Код з листа"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink text-center tracking-[0.3em] focus:outline-none focus:border-primary"
+              />
+
+              {error && (
+                <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary text-white px-6 py-3 rounded-2xl font-semibold hover:bg-primary-dark transition disabled:opacity-50"
+              >
+                {isSubmitting ? "Перевіряємо..." : "Підтвердити"}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={handleResendCode}
+              className="w-full text-sm font-semibold text-primary hover:underline mt-4"
+            >
+              Надіслати код ще раз
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setStep("sign_in");
+              }}
+              className="w-full text-sm font-semibold text-muted hover:text-primary mt-2"
+            >
+              ← Назад до входу
+            </button>
           </>
         )}
 
