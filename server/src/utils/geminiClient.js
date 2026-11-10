@@ -11,10 +11,10 @@ const RETRYABLE_TEXT = /\b(429|500|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|high de
 const RETRY_DELAYS_MS = [1500, 4000];
 // Gemini під навантаженням інколи не повертає ні відповіді, ні помилки -
 // без тайм-ауту запит висів хвилинами, а клієнт бачив вічне "Аналізую...".
-const ATTEMPT_TIMEOUT_MS = 25000;
+const ATTEMPT_TIMEOUT_MS = 20000;
 // Загальний бюджет на всі спроби разом - щоб повтори не розтягували
 // очікування користувача понад розумну межу.
-const TOTAL_BUDGET_MS = 50000;
+const TOTAL_BUDGET_MS = 55000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -24,6 +24,7 @@ function withTimeout(promise, ms) {
     timer = setTimeout(() => {
       const error = new Error(`Gemini не відповів за ${ms / 1000} с`);
       error.status = 503;
+      error.isTimeout = true;
       reject(error);
     }, ms);
   });
@@ -59,6 +60,9 @@ async function createWithRetry(rawClient, params) {
       } catch (error) {
         lastError = error;
         if (!isRetryable(error)) throw error;
+        // Модель зависла - повторювати її ж немає сенсу (наступна спроба
+        // теж висітиме й з'їсть увесь бюджет), одразу переходимо до резервної.
+        if (error.isTimeout) break;
         console.warn(
           `⚠️ Gemini (${model}) тимчасово недоступний, спроба ${attempt + 1}: ${error.message}`,
         );
