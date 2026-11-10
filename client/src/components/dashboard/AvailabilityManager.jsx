@@ -126,7 +126,7 @@ const AvailabilityManager = () => {
       <div>
         <h2 className="text-xl font-extrabold text-ink mb-1">Вільні дати</h2>
         <p className="text-sm text-muted">
-          Додай час, коли ти доступна для сесій — клієнти побачать ці слоти на
+          Додай час, коли можеш проводити сесії - клієнти побачать ці слоти на
           твоїй публічній картці й зможуть забронювати.
         </p>
       </div>

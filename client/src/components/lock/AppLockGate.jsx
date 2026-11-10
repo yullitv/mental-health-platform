@@ -9,7 +9,7 @@ import {
 } from "../../utils/appLock";
 
 // Автоблокування: якщо вкладка була прихована довше цього порогу (перехід
-// в інший застосунок, вимкнення екрана) — при поверненні знову просимо PIN.
+// в інший застосунок, вимкнення екрана) - при поверненні знову просимо PIN.
 // Короткий погляд убік (перевірити сповіщення) замок НЕ спрацьовує.
 const AUTO_LOCK_AFTER_HIDDEN_MS = 30000;
 
@@ -108,7 +108,7 @@ const AppLockGate = ({ children }) => {
           onClick={handleForgotPin}
           className="w-full text-xs text-muted hover:text-ink hover:underline"
         >
-          Забула PIN? Скинути його
+          Не пам'ятаєш PIN? Скинути його
         </button>
       </form>
     </div>

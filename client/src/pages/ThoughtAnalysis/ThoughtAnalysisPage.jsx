@@ -51,7 +51,7 @@ const ThoughtAnalysisPage = () => {
       <div className="bg-surface border border-border rounded-2xl shadow-[0_12px_28px_rgba(36,31,51,0.06)] p-6">
         <h2 className="text-2xl font-extrabold text-ink mb-2">Аналіз думки</h2>
         <p className="text-sm text-muted mb-4">
-          Опиши ситуацію і думку, яка тебе турбує, — розберемо її на факти,
+          Опиши ситуацію і думку, яка тебе турбує, - розберемо її на факти,
           інтерпретації та альтернативні пояснення. Це не діагностика і не
           заміна консультації спеціаліста.
         </p>
@@ -68,7 +68,7 @@ const ThoughtAnalysisPage = () => {
               maxLength={1000}
               required
               className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Наприклад: він не відповідає на повідомлення вже 5 годин"
+              placeholder="Наприклад: друг не відповідає на повідомлення вже 5 годин"
             />
           </div>
 
@@ -83,7 +83,7 @@ const ThoughtAnalysisPage = () => {
               maxLength={500}
               required
               className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Наприклад: я йому набридла, він мене кине"
+              placeholder="Наприклад: я йому набрид(-ла), він більше не захоче спілкуватись"
             />
           </div>
 
