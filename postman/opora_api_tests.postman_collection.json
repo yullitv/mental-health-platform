@@ -1,0 +1,888 @@
+{
+  "info": {
+    "name": "Опора API — тестування",
+    "description": "Колекція тестів REST API платформи «Опора»: публічні ендпоінти, захист і рольова модель.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://mental-health-platform-0msc.onrender.com"
+    },
+    {
+      "key": "clientOrigin",
+      "value": "https://mental-health-platform-lilac.vercel.app"
+    },
+    {
+      "key": "specialistId",
+      "value": ""
+    },
+    {
+      "key": "clientToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Публічні ендпоінти",
+      "item": [
+        {
+          "name": "Перевірка працездатності сервера",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Тіло {status: ok}\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Каталог верифікованих спеціалістів",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Повертається непорожній масив\", () => { pm.expect(list).to.be.an(\"array\"); pm.expect(list.length).to.be.above(0); });",
+                  "pm.test(\"Кожна картка містить ім'я, рейтинг і кількість відгуків\", () => list.forEach(s => {",
+                  "  pm.expect(s.user.firstName).to.be.a(\"string\");",
+                  "  pm.expect(s).to.have.property(\"averageRating\");",
+                  "  pm.expect(s.reviewsCount).to.be.a(\"number\");",
+                  "}));",
+                  "pm.test(\"Публічна відповідь не містить приватних даних\", () => list.forEach(s => {",
+                  "  [\"documentsUrl\", \"licenseNumber\", \"verificationStatus\", \"aiScreeningNotes\", \"userId\"].forEach(f => pm.expect(s).to.not.have.property(f));",
+                  "  pm.expect(s.user).to.not.have.property(\"email\");",
+                  "  pm.expect(s).to.not.have.property(\"reviews\");",
+                  "}));",
+                  "pm.collectionVariables.set(\"specialistId\", list[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Картка спеціаліста за ідентифікатором",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists/{{specialistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists",
+                "{{specialistId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Повертається запитаний спеціаліст\", () => pm.expect(s.id).to.eql(pm.collectionVariables.get(\"specialistId\")));",
+                  "pm.test(\"Немає документів та email\", () => { pm.expect(s).to.not.have.property(\"documentsUrl\"); pm.expect(s.user).to.not.have.property(\"email\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Неіснуючий спеціаліст",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists/nonexistent-id-000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists",
+                "nonexistent-id-000"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Повідомлення про помилку\", () => pm.expect(pm.response.json().message).to.include(\"не знайдено\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Вільні слоти спеціаліста",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/availability/{{specialistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "availability",
+                "{{specialistId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const slots = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Масив слотів\", () => pm.expect(slots).to.be.an(\"array\"));",
+                  "pm.test(\"Лише незаброньовані майбутні слоти\", () => slots.forEach(sl => {",
+                  "  pm.expect(sl.isBooked).to.eql(false);",
+                  "  pm.expect(new Date(sl.startTime).getTime()).to.be.above(Date.now());",
+                  "}));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Відгуки про спеціаліста",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/specialist/{{specialistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "specialist",
+                "{{specialistId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const reviews = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Оцінки в межах 1-5\", () => reviews.forEach(r => pm.expect(r.rating).to.be.within(1, 5)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Активні благодійні збори",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fundraisers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fundraisers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const funds = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Повертаються лише активні збори\", () => funds.forEach(f => pm.expect(f.isActive).to.eql(true)));",
+                  "pm.test(\"У відповіді немає токена банку\", () => pm.expect(pm.response.text()).to.not.match(/token/i));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Неіснуючий маршрут API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "does-not-exist"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"JSON замість HTML-сторінки\", () => pm.expect(pm.response.json().message).to.eql(\"Маршрут не знайдено\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Захист API",
+      "item": [
+        {
+          "name": "Сесії без автентифікації",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Щоденник без автентифікації",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/diary/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "diary",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Черга донатів без автентифікації",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/donations/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "donations",
+                "pending"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Верифікація спеціаліста без автентифікації",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists/{{specialistId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists",
+                "{{specialistId}}",
+                "verify"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"APPROVED\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI-аналіз думки без автентифікації",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/thought-analysis",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "thought-analysis"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"situation\": \"тест\", \"thought\": \"тест\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Підроблений токен",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer fake.invalid.token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists",
+                "pending"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 401 без токена\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Відповідь у форматі JSON з повідомленням\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Заголовки безпеки (helmet)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"X-Content-Type-Options: nosniff\", () => pm.expect(pm.response.headers.get(\"X-Content-Type-Options\")).to.eql(\"nosniff\"));",
+                  "pm.test(\"Strict-Transport-Security присутній\", () => pm.expect(pm.response.headers.has(\"Strict-Transport-Security\")).to.be.true);",
+                  "pm.test(\"Content-Security-Policy присутній\", () => pm.expect(pm.response.headers.has(\"Content-Security-Policy\")).to.be.true);",
+                  "pm.test(\"X-Powered-By прихований\", () => pm.expect(pm.response.headers.has(\"X-Powered-By\")).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CORS: дозволене джерело",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{clientOrigin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fundraisers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fundraisers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Access-Control-Allow-Origin = домен клієнта\", () =>",
+                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(pm.collectionVariables.get(\"clientOrigin\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CORS: стороннє джерело",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "https://evil.example.com"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fundraisers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fundraisers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Сторонній домен не отримує дозволу CORS\", () => pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Обмеження частоти запитів",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fundraisers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fundraisers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Сервер повідомляє ліміт 300 запитів\", () => pm.expect(pm.response.headers.get(\"RateLimit-Limit\")).to.eql(\"300\"));",
+                  "pm.test(\"Лічильник залишку присутній\", () => pm.expect(Number(pm.response.headers.get(\"RateLimit-Remaining\"))).to.be.below(300));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Рольова модель (токен клієнта)",
+      "item": [
+        {
+          "name": "Клієнт: власні сесії",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessions",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"clientToken\") && !pm.collectionVariables.get(\"clientToken\")) {",
+                  "  console.log(\"clientToken не задано - запит пропущено\");",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Масив сесій\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Клієнт: щоденник зберігається лише як шифротекст",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/diary/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "diary",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"clientToken\") && !pm.collectionVariables.get(\"clientToken\")) {",
+                  "  console.log(\"clientToken не задано - запит пропущено\");",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const entries = pm.response.json();",
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Записи містять лише cipherText без відкритих полів\", () => entries.forEach(e => {",
+                  "  pm.expect(e.cipherText).to.be.a(\"string\");",
+                  "  [\"mood\", \"note\", \"sleepHours\", \"physicalState\"].forEach(f => pm.expect(e).to.not.have.property(f));",
+                  "}));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Клієнт: черга верифікації адміністратора",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialists/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialists",
+                "pending"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"clientToken\") && !pm.collectionVariables.get(\"clientToken\")) {",
+                  "  console.log(\"clientToken не задано - запит пропущено\");",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 403 - недостатньо прав\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Клієнт: створення благодійного збору",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fundraisers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fundraisers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Тест\", \"bankJarUrl\": \"https://send.monobank.ua/jar/test\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"clientToken\") && !pm.collectionVariables.get(\"clientToken\")) {",
+                  "  console.log(\"clientToken не задано - запит пропущено\");",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 403 - лише для адміністратора\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Клієнт: підтвердження донату",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/donations/nonexistent/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "donations",
+                "nonexistent",
+                "confirm"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"clientToken\") && !pm.collectionVariables.get(\"clientToken\")) {",
+                  "  console.log(\"clientToken не задано - запит пропущено\");",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 403 - клієнт не може підтверджувати донати\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
