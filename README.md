@@ -31,6 +31,23 @@ npm run dev
 
 Клієнт - на `http://localhost:5173`.
 
+## Тести
+
+Автотести написані на вбудованому `node:test` і не потребують додаткових залежностей.
+
+```bash
+cd client && npm test   # 12 модульних тестів: E2EE, PHQ-9/GAD-7, серія, код оплати, відеокімната
+cd server && npm test   # 4 тести HTTP-обробників + 7 інтеграційних тестів бази даних
+```
+
+Тести бази даних очищають таблиці, тому запускаються лише з окремою тестовою базою PostgreSQL із застосованими міграціями. Назва бази має містити `test`:
+
+```bash
+TEST_DATABASE_URL="postgresql://user:pass@localhost:5432/opora_test" npm test
+```
+
+Без `TEST_DATABASE_URL` ці 7 тестів пропускаються, а робочу базу вони не чіпають за жодних умов.
+
 ## Змінні середовища
 
 Повний список і опис - у `server/.env.example` та `client/.env.example`. Коротко: `DATABASE_URL`, `CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY`, `GEMINI_API_KEY`, `CLIENT_ORIGIN`, `R2_*` (для сервера); `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_BASE_URL` (для клієнта).
