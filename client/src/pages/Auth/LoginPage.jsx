@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-react";
 import { Link, useNavigate } from "react-router-dom";
+import PasswordInput from "../../components/auth/PasswordInput";
 
 const errorMessage = (err, fallback) =>
   err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || fallback;
@@ -18,6 +19,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -118,7 +120,7 @@ const LoginPage = () => {
       setError(
         errorMessage(
           err,
-          "Не вдалось надіслати код. Перевір email або зверніcь пізніше.",
+          "Не вдалось надіслати код. Перевір email або спробуй пізніше.",
         ),
       );
     } finally {
@@ -130,6 +132,10 @@ const LoginPage = () => {
     e.preventDefault();
     if (!isLoaded) return;
     setError("");
+    if (newPassword !== newPasswordConfirm) {
+      setError("Паролі не збігаються. Введи однаковий пароль в обидва поля.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const result = await signIn.attemptFirstFactor({
@@ -170,13 +176,11 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
               />
-              <input
-                type="password"
-                required
+              <PasswordInput
+                autoComplete="current-password"
                 placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
               />
 
               {error && (
@@ -343,15 +347,24 @@ const LoginPage = () => {
                 onChange={(e) => setCode(e.target.value)}
                 className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink text-center tracking-[0.3em] focus:outline-none focus:border-primary"
               />
-              <input
-                type="password"
-                required
+              <PasswordInput
                 minLength={8}
+                autoComplete="new-password"
                 placeholder="Новий пароль (мінімум 8 символів)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
               />
+              <PasswordInput
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Повтори новий пароль"
+                value={newPasswordConfirm}
+                onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                invalid={newPasswordConfirm.length > 0 && newPasswordConfirm !== newPassword}
+              />
+              {newPasswordConfirm.length > 0 && newPasswordConfirm !== newPassword && (
+                <p className="text-xs text-danger">Паролі не збігаються</p>
+              )}
 
               {error && (
                 <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">

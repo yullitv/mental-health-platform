@@ -58,7 +58,7 @@ exports.bookSlot = async (req, res) => {
         userId: specialistProfile.userId,
         type: "SESSION_BOOKED",
         title: "Нове бронювання",
-        message: `У вас нова сесія на ${session.startTime.toLocaleString("uk-UA")}`,
+        message: `У вас нова сесія на ${session.startTime.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv", dateStyle: "short", timeStyle: "short" })}`,
         link: `/dashboard`,
       });
     }

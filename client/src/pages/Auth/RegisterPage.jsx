@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import PasswordInput from "../../components/auth/PasswordInput";
 
 const ROLE_OPTIONS = [
   { value: "CLIENT", label: "Я шукаю підтримку" },
@@ -23,6 +24,7 @@ const RegisterPage = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -32,6 +34,11 @@ const RegisterPage = () => {
     e.preventDefault();
     if (!isLoaded) return;
     setError("");
+
+    if (password !== passwordConfirm) {
+      setError("Паролі не збігаються. Введи однаковий пароль в обидва поля.");
+      return;
+    }
 
     if (!agreed) {
       setError("Потрібно погодитись з умовами обробки даних, щоб продовжити.");
@@ -144,15 +151,24 @@ const RegisterPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
               />
-              <input
-                type="password"
-                required
+              <PasswordInput
                 minLength={8}
+                autoComplete="new-password"
                 placeholder="Пароль (мінімум 8 символів)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-border bg-canvas px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
               />
+              <PasswordInput
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Повтори пароль"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                invalid={passwordConfirm.length > 0 && passwordConfirm !== password}
+              />
+              {passwordConfirm.length > 0 && passwordConfirm !== password && (
+                <p className="text-xs text-danger">Паролі не збігаються</p>
+              )}
 
               <label className="flex items-start gap-2 text-xs text-muted pt-1">
                 <input
