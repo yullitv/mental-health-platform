@@ -49,8 +49,24 @@ app.use(express.json());
 // зберігаються в Cloudflare R2, а не на диску сервера - окремий статичний
 // роут /uploads більше не потрібен (server/src/utils/r2Client.js).
 
-// Тепер це запрацює!
-app.use(clerkMiddleware());
+// Clerk розбирає токен з заголовка Authorization. Пошкоджений токен (наприклад,
+// три частини, що не є валідним JWT) змушує його кинути SyntaxError - без цієї
+// обгортки такий запит отримав би 500 замість 401.
+const clerk = clerkMiddleware();
+app.use((req, res, next) => {
+  let handled = false;
+  const afterAuth = (err) => {
+    if (handled) return;
+    handled = true;
+    if (err) {
+      return res
+        .status(401)
+        .json({ message: "Недійсний токен автентифікації" });
+    }
+    next();
+  };
+  Promise.resolve(clerk(req, res, afterAuth)).catch(afterAuth);
+});
 
 app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
 
