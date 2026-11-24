@@ -13,9 +13,6 @@ const GROUNDING_STEPS = [
   { sense: "1", text: "смак, який відчуваєш зараз" },
 ];
 
-// Окремий, завжди доступний екран підтримки - не прив'язаний до жодної
-// конкретної фічі. Відкривається з плаваючої кнопки "Потрібна допомога"
-// на будь-якій сторінці, а також з кризової картки в "Аналізі думки".
 const CrisisPage = () => {
   const { getToken } = useAuth();
   const { dbUser } = useCurrentUser();
@@ -35,7 +32,7 @@ const CrisisPage = () => {
         const confirmed = sessions.find((s) => s.status === "CONFIRMED");
         if (!cancelled) setActiveSession(confirmed ?? null);
       } catch {
-        // Мовчки ігноруємо - недоступність сесій не має блокувати сторінку допомоги.
+        // без активної сесії сторінка працює як звичайно
       } finally {
         if (!cancelled) setIsLoading(false);
       }

@@ -29,9 +29,6 @@ const ScreeningPage = () => {
   const [result, setResult] = useState(null);
   const [saveError, setSaveError] = useState("");
 
-  // Історія результатів шифрується тим самим локальним ключем, що й
-  // щоденник (той самий "diary_encryption_key_v1" у localStorage) - так
-  // застосунок має один ключ для всіх чутливих даних, які вводить людина.
   const loadHistory = useCallback(
     async (key) => {
       if (!key) return;
@@ -68,8 +65,6 @@ const ScreeningPage = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // ensureKey(false) повертає вже наявний локальний ключ (наприклад,
-      // з щоденника), або створює новий, якщо його ще немає в браузері.
       const { key } = await ensureKey(false);
       if (cancelled || !key) return;
       setEncryptionKey(key);

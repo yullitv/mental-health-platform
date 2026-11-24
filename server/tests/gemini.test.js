@@ -1,4 +1,3 @@
-// Ланцюжок резервних моделей Gemini з fake-реалізацією SDK замість мережі.
 const test = require("node:test"); const assert = require("node:assert/strict");
 const { mock } = test;
 const calls = [];

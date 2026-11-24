@@ -1,6 +1,5 @@
 const prisma = require("../prisma");
 
-// GET /api/fundraisers - публічний список активних фондів (для вибору під час донату)
 exports.getActiveFundraisers = async (req, res) => {
   try {
     const fundraisers = await prisma.fundraiser.findMany({
@@ -14,7 +13,6 @@ exports.getActiveFundraisers = async (req, res) => {
   }
 };
 
-// GET /api/fundraisers/admin - усі фонди (активні й неактивні), лише для адміна
 exports.getAllFundraisers = async (req, res) => {
   try {
     const fundraisers = await prisma.fundraiser.findMany({
@@ -65,7 +63,6 @@ exports.createFundraiser = async (req, res) => {
   }
 };
 
-// PUT /api/fundraisers/:id - редагування (включно з isActive/isVerified), лише адмін
 exports.updateFundraiser = async (req, res) => {
   try {
     const { id } = req.params;

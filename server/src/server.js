@@ -34,24 +34,12 @@ const safetyPlanRoutes = require("./routes/safetyPlanRoutes");
 
 const app = express();
 
-// Render (як і більшість хостингів) ставить перед застосунком один
-// reverse proxy, який передає справжню IP-адресу клієнта в X-Forwarded-For.
-// Без цього Express бачить IP самого проксі - і rate limiter рахував би
-// всіх користувачів як одного (express-rate-limit про це й попереджав у
-// логах помилкою ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
 app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-// Файли (фото спеціалістів, донат-скріни, документи верифікації) тепер
-// зберігаються в Cloudflare R2, а не на диску сервера - окремий статичний
-// роут /uploads більше не потрібен (server/src/utils/r2Client.js).
-
-// Clerk розбирає токен з заголовка Authorization. Пошкоджений токен (наприклад,
-// три частини, що не є валідним JWT) змушує його кинути SyntaxError - без цієї
-// обгортки такий запит отримав би 500 замість 401.
 const clerk = clerkMiddleware();
 app.use((req, res, next) => {
   let handled = false;
@@ -91,14 +79,10 @@ app.get("/", (req, res) => {
   res.send("Mental Health API with Clerk Express is running...");
 });
 
-// Єдиний формат для запиту на неіснуючий /api/... маршрут (замість
-// дефолтного HTML від Express).
 app.use("/api", (req, res) => {
   res.status(404).json({ message: "Маршрут не знайдено" });
 });
 
-// Загальний обробник помилок - підстраховка на випадок, якщо якийсь
-// контролер кине помилку повз власний try/catch.
 app.use((err, req, res, next) => {
   console.error("❌ Необроблена помилка:", err);
   res.status(err.status || 500).json({ message: "Помилка сервера" });

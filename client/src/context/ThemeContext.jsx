@@ -4,8 +4,6 @@ const ThemeContext = createContext(null);
 
 const STORAGE_KEY = "opora-theme";
 
-// Визначає початкову тему: раніше збережений вибір користувача - або,
-// якщо його ще немає, системна тема ОС (prefers-color-scheme).
 function getInitialTheme() {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY);

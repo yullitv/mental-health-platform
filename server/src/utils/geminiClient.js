@@ -2,19 +2,6 @@ const { GoogleGenAI } = require("@google/genai");
 
 let client;
 
-// Чому тут адаптер, а не прямий виклик SDK.
-// Контролери історично викликають client.interactions.create(...). На
-// практиці це API під навантаженням моделі не повертає ні відповіді, ні
-// помилки - запит просто висить (перевірено scripts/geminiCheck.js:
-// interactions - тайм-аут 40 с, generateContent на ту саму модель - чесна
-// 503 "high demand" за 5-10 с). Тому під капотом використовуємо стабільний
-// models.generateContent, а формат виклику для контролерів лишаємо тим
-// самим - їх міняти не треба.
-
-// Ланцюжок моделей: перша, що відповіла, і дає результат. Основну можна
-// перевизначити через GEMINI_MODEL, резервні - через GEMINI_FALLBACK_MODEL
-// (одна або кілька через кому). Безкоштовний тариф регулярно перевантажує
-// окремі моделі (503), тож кілька моделей у ланцюжку - норма, а не надмірність.
 function modelChain(requestedModel) {
   const primary = process.env.GEMINI_MODEL || requestedModel;
   const fallbacks = (process.env.GEMINI_FALLBACK_MODEL || "")
@@ -24,14 +11,9 @@ function modelChain(requestedModel) {
   return [...new Set([primary, ...fallbacks])];
 }
 
-// Помилки, після яких має сенс пробувати ще: 503 (модель перевантажена),
-// 429 (ліміт запитів), 500 з боку Google, а також 404 "модель недоступна
-// для нових користувачів" - тоді просто йдемо до наступної моделі.
 const RETRYABLE_STATUS = new Set([404, 429, 500, 503]);
 const RETRYABLE_TEXT =
   /\b(404|429|500|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|NOT_FOUND|high demand|rate limit|no longer available/i;
-// Одна коротка повторна спроба тієї ж моделі (503 часто минає за секунди),
-// далі - наступна модель.
 const SAME_MODEL_RETRY_DELAY_MS = 1500;
 const ATTEMPT_TIMEOUT_MS = 25000;
 const TOTAL_BUDGET_MS = 55000;
@@ -101,7 +83,6 @@ async function generate(rawClient, params) {
         lastError = error;
         if (!isRetryable(error)) throw error;
         console.warn(`⚠️ Gemini (${model}) спроба ${attempt + 1}: ${String(error.message).slice(0, 160)}`);
-        // Тайм-аут, 404 чи 429 - ця модель зараз не відповість, одразу наступна.
         const status = Number(error.status);
         if (error.isTimeout || status === 404 || status === 429 || attempt === 1) break;
         await sleep(SAME_MODEL_RETRY_DELAY_MS);
@@ -111,8 +92,6 @@ async function generate(rawClient, params) {
   throw lastError;
 }
 
-// Лінива ініціалізація - щоб сервер не падав на старті, якщо ключ ще не
-// доданий у .env (а падав лише в момент реального запиту до фічі).
 function getGeminiClient() {
   if (!client) {
     if (!process.env.GEMINI_API_KEY) {

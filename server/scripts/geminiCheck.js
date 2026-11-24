@@ -1,6 +1,3 @@
-// Діагностика Gemini: які моделі доступні ключу і що саме відповідає
-// (або висить) для кожної моделі через обидва API SDK.
-// Запуск: cd server && node scripts/geminiCheck.js
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 

@@ -214,8 +214,6 @@ const HomePage = () => {
           </p>
         </div>
 
-        {/* Для спеціалістів - лише гостям, залогінений спеціаліст і так
-              уже приєднався, а клієнт/адмін тут нічого не "приєднає". */}
         <SignedOut>
           <div className="mt-14 bg-primary-soft rounded-3xl p-8 sm:p-10 text-center">
             <h2 className="text-2xl font-extrabold text-ink mb-3">
@@ -253,8 +251,6 @@ const HomePage = () => {
           </Link>
         </div>
 
-        {/* Фінальний CTA - теж лише гостям, залогінений вже має свою
-              кнопку "в кабінет" у хіро вище. */}
         <SignedOut>
           <div className="text-center mt-14">
             <h2 className="text-2xl font-extrabold text-ink mb-6">

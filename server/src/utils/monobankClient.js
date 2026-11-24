@@ -1,19 +1,11 @@
-// Клієнт для Monobank Open API - читання виписки власної банки (jar) для
-// незалежної (не-AI) перевірки донатів. Працює лише якщо в .env заданий
-// MONOBANK_JAR_TOKEN - особистий токен власника банки, отриманий на
-// https://api.monobank.ua/. Токен НІКОЛИ не потрапляє в код чи git.
 
 const STATEMENT_URL = "https://api.monobank.ua/personal/statement";
 
-// Офіційний ліміт Monobank - не частіше ніж 1 запит на 60с на весь токен
-// (не на окрему банку). Тримаємо трохи більший інтервал і кешуємо останню
-// відповідь, щоб не впертись у 429 при кількох донатах поспіль.
 const MIN_INTERVAL_MS = 61 * 1000;
 const MAX_RANGE_MS = 31 * 24 * 60 * 60 * 1000; // максимум за один запит - 31 доба
 
 let lastCall = { at: 0, promise: null };
 
-// GET /personal/statement/{account}/{from}/{to} - {from}/{to} у секундах Unix.
 async function fetchJarStatement(jarId, fromDate, toDate) {
   const token = process.env.MONOBANK_JAR_TOKEN;
   if (!token) {

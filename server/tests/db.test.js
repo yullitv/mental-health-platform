@@ -1,13 +1,6 @@
-// Інтеграційні тести обмежень бази даних: атомарне бронювання слота під
-// конкурентним навантаженням, унікальні обмеження донатів, відгуків і щоденника,
-// каскадне видалення.
 const test = require("node:test"); const assert = require("node:assert/strict");
 const { Pool } = require("pg");
 
-// Ці тести ОЧИЩАЮТЬ таблиці (TRUNCATE), тому працюють лише з окремою тестовою
-// базою, до якої застосовано міграції проєкту (npx prisma migrate deploy).
-// Адресу передають через TEST_DATABASE_URL; назва бази має містити "test",
-// а сама адреса не може збігатися з робочою DATABASE_URL. Інакше тести пропускаються.
 const url = process.env.TEST_DATABASE_URL || "";
 let dbName = "";
 try { dbName = new URL(url).pathname.slice(1); } catch { dbName = ""; }

@@ -8,9 +8,6 @@ const { uploadBuffer, getPresignedUrl } = require("../utils/r2Client");
 
 const DONATION_SCREENING_MODEL = "gemini-3.7-flash";
 
-// AI НЕ приймає рішення про підтвердження донату - лише готує підказку для
-// того, хто буде дивитись (спеціаліст/адмін). Той самий безпековий принцип,
-// що й у верифікації спеціалістів: людина завжди вирішує сама.
 const DONATION_SCREENING_SYSTEM_INSTRUCTION = `Ти - асистент попереднього скринінгу підтверджень донату для платформи психологічної підтримки "Опора". Клієнт надсилає скріншот банківського переказу як доказ донату в благодійний фонд перед сесією. Твоє завдання - ДОПОМОГТИ людині, яка перевіряє донат, а не замінити її рішення.
 
 СУВОРІ ПРАВИЛА:
@@ -85,12 +82,6 @@ async function screenDonationProof(
   return JSON.parse(interaction.output_text);
 }
 
-// Незалежна від AI перевірка через реальну виписку банки Monobank -
-// працює лише якщо у фонду вказано monobankJarId. Набагато надійніший
-// сигнал за читання скріна, бо це справжні дані транзакції, а не OCR.
-// Викликається двічі за життя донату: одразу при подачі заяви (без скріна)
-// і повторно, коли клієнт довантажує скрін - переказ міг з'явитись у
-// виписці не одразу.
 async function checkBankConfirmation(
   fundraiser,
   session,
@@ -120,7 +111,6 @@ async function checkBankConfirmation(
     });
     const usedIds = new Set(usedTransactions.map((d) => d.bankTransactionId));
 
-    // Усі перекази з правильною сумою, які ще не "витрачені" на інший донат.
     const candidates = statement.filter(
       (tx) =>
         tx.amount > 0 &&
@@ -128,12 +118,6 @@ async function checkBankConfirmation(
         !usedIds.has(tx.id),
     );
 
-    // Код сесії (client/src/utils/paymentCode.js), який клієнту пропонується
-    // вписати в коментар до переказу - щоб не переплутати двох клієнтів,
-    // які донатять однакову суму приблизно в той самий час. ПРИМІТКА: точну
-    // назву поля з текстом коментаря у відповіді Monobank Statement API ще
-    // не звірено на реальній транзакції - перевіряємо і "description", і
-    // "comment" про всяк випадок.
     const paymentCode = getPaymentCode(sessionId);
     const txText = (tx) =>
       `${tx.description || ""} ${tx.comment || ""}`.toUpperCase();
@@ -144,9 +128,6 @@ async function checkBankConfirmation(
       // Код у коментарі - однозначний збіг, навіть якщо кандидатів кілька.
       match = codeMatch;
     } else if (candidates.length === 1) {
-      // Без коду підтверджуємо автоматично лише якщо кандидат за сумою
-      // рівно один - якщо їх кілька, вгадати правильний неможливо, і
-      // краще лишити на ручну перевірку, ніж переплутати клієнтів.
       match = candidates[0];
     }
 
@@ -163,12 +144,6 @@ async function checkBankConfirmation(
   }
 }
 
-// POST /api/donations - клієнт заявляє донат для своєї сесії. Скрін НЕ
-// потрібен одразу: спершу пробуємо підтвердити донат автоматично через
-// реальну виписку банки (checkBankConfirmation). Якщо вдалось - донат і
-// сесія одразу CONFIRMED, без участі людини. Якщо ні - донат лишається
-// PENDING, і клієнту показують запасний варіант: довантажити скрін для
-// ручної перевірки (PUT /api/donations/:id/proof).
 exports.createDonation = async (req, res) => {
   try {
     const { sessionId, fundraiserId, amount } = req.body;
@@ -288,15 +263,6 @@ exports.createDonation = async (req, res) => {
   }
 };
 
-// PUT /api/donations/:id/proof - запасний варіант: клієнт довантажує скрін
-// для донату, який банк не підтвердив автоматично одразу. Тут-таки ще раз
-// пробуємо звірити з банком (переказ міг з'явитись у виписці пізніше) -
-// якщо вдалось, донат підтверджується автоматично й без AI; якщо ні, скрін
-// проходить AI-скринінг і лишається на ручну перевірку спеціаліста/адміна.
-//
-// Файл ніколи не торкається диска сервера (multer.memoryStorage) - одразу
-// вивантажується в R2 як приватний обʼєкт, доступ до якого дає лише
-// короткочасне підписане посилання (getPendingDonations нижче).
 exports.attachDonationProof = async (req, res) => {
   try {
     const { id } = req.params;
@@ -330,9 +296,6 @@ exports.attachDonationProof = async (req, res) => {
       .update(req.file.buffer)
       .digest("hex");
 
-    // Той самий жорсткий захист, що й раніше - той самий файл не можна
-    // використати повторно для іншого донату. Рахуємо хеш ДО вивантаження
-    // в R2, щоб не займати сховище файлом, який все одно буде відхилено.
     const existingByHash = await prisma.donation.findUnique({
       where: { proofHash },
     });
@@ -350,8 +313,6 @@ exports.attachDonationProof = async (req, res) => {
       req.file.originalname,
     );
 
-    // Повторна спроба звірки з банком - переказ міг з'явитись у виписці
-    // вже після початкової подачі заяви на донат.
     const { bankConfirmed, bankTransactionId } = await checkBankConfirmation(
       donation.fundraiser,
       donation.session,
@@ -359,7 +320,6 @@ exports.attachDonationProof = async (req, res) => {
       donation.amount,
     );
 
-    // AI-скринінг скріна - підказка для людини, якщо банк все ще не підтвердив.
     let extractedAmount = null;
     let extractedReference = null;
     let extractedRecipient = null;
@@ -488,9 +448,6 @@ exports.attachDonationProof = async (req, res) => {
   }
 };
 
-// GET /api/donations/pending - список донатів, що очікують підтвердження.
-// proofUrl у відповіді - короткочасне підписане посилання на R2 (не сам
-// ключ), тому кожен запит цього ендпоінта генерує свіже посилання.
 exports.getPendingDonations = async (req, res) => {
   try {
     const user = req.dbUser;
@@ -641,5 +598,4 @@ exports.rejectDonation = async (req, res) => {
     res.status(500).json({ message: "Помилка сервера" });
   }
 };
-// Експорт для модульних тестів звірки з випискою (tests/donation.test.js).
 exports.checkBankConfirmation = checkBankConfirmation;

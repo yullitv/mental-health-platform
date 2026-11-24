@@ -3,9 +3,6 @@ import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
 import { AI_STATUS_LABELS } from "../../constants/specialistVerification";
 
-// Той самий список, що клієнт бачив в анкеті ("з чим працює") - тепер
-// спеціаліст сам відмічає, з якими запитами працює, і клієнт може
-// відфільтрувати список за цим на сторінці "Спеціалісти".
 const CONCERN_OPTIONS = [
   { value: "anxiety", label: "Тривожність" },
   { value: "stress", label: "Стрес" },

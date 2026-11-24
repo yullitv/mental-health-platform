@@ -17,9 +17,6 @@ exports.syncUser = async (req, res) => {
         .json({ message: "Неавторизований доступ: токен не розпізнано" });
     }
 
-    // Дозволяємо вибір ролі лише між CLIENT і SPECIALIST через публічну
-    // реєстрацію. ADMIN ніколи не призначається через цей ендпоінт -
-    // тільки вручну в базі.
     const requestedRole = role === "SPECIALIST" ? "SPECIALIST" : "CLIENT";
 
     const existingUser = await prisma.user.findUnique({
@@ -29,15 +26,11 @@ exports.syncUser = async (req, res) => {
     let user;
 
     if (existingUser) {
-      // Користувач уже існує - роль зафіксована при першій реєстрації,
-      // тут її НЕ змінюємо (щоб CLIENT не міг сам "перевибрати" себе в SPECIALIST).
       user = await prisma.user.update({
         where: { clerkId: userId },
         data: { firstName, lastName },
       });
     } else {
-      // Новий користувач - створюємо і, якщо обрано SPECIALIST,
-      // одразу заводимо порожній SpecialistProfile у тій самій транзакції.
       user = await prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {

@@ -1,5 +1,3 @@
-// Підміна модулів у кеші require для ізоляції одиниці, що тестується,
-// від бази даних, банку, AI-сервісу, сокетів і пошти.
 const path = require("node:path");
 const SRC = path.join(__dirname, "..", "src");
 function inject(relPath, exportsObj) {

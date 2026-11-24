@@ -1,6 +1,3 @@
-// Клієнтське E2E-шифрування записів щоденника (AES-256-GCM, Web Crypto API).
-// Ключ ніколи не залишає браузер і не надсилається на сервер - сервер
-// зберігає лише незрозумілий шифротекст (cipherText).
 
 const STORAGE_KEY = "diary_encryption_key_v1";
 
@@ -53,8 +50,6 @@ async function importKey(base64Key) {
   ]);
 }
 
-// Повертає { key, isNew } - isNew=true, якщо ключ щойно згенеровано
-// (немає жодних старих зашифрованих записів, які могли б від нього залежати).
 export async function ensureKey(hasExistingEntries) {
   const existing = getStoredKey();
   if (existing) return { key: existing, isNew: false };
@@ -92,8 +87,6 @@ export async function decryptEntry(base64Key, cipherText) {
   return JSON.parse(new TextDecoder().decode(plainBuf));
 }
 
-// Пробна розшифровка одного запису - використовується, щоб перевірити,
-// чи введений користувачем ключ підходить, перш ніж його зберегти.
 export async function tryDecrypt(base64Key, cipherText) {
   try {
     await decryptEntry(base64Key, cipherText);

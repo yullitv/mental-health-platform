@@ -10,7 +10,6 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      // Дозволяє тестувати PWA прямо через `npm run dev`, без окремого build
       devOptions: {
         enabled: true,
         type: "module",

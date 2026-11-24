@@ -70,7 +70,6 @@ exports.getMyReviews = async (req, res) => {
   }
 };
 
-// GET /api/reviews/specialist/:specialistId - публічні відгуки про спеціаліста
 exports.getSpecialistReviews = async (req, res) => {
   try {
     const { specialistId } = req.params;

@@ -1,4 +1,3 @@
-// Рольова модель: Clerk (stub getAuth) і база (fake) замінені, відповідь — spy-об'єкт.
 const test = require("node:test"); const assert = require("node:assert/strict");
 const { mock } = test;
 const { inject, load } = require("./helpers.js");

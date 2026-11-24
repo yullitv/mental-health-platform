@@ -16,14 +16,9 @@ const PUBLIC_SPECIALIST_SELECT = {
   photoUrl: true,
   experience: true,
   user: { select: { firstName: true, lastName: true } },
-  // Лише оцінки (без коментарів/авторів) - щоб порахувати середній рейтинг
-  // і кількість відгуків, не роздуваючи публічний список/картку зайвими
-  // даними. Повний текст відгуків - окремо, через /api/reviews/specialist/:id.
   reviews: { select: { rating: true } },
 };
 
-// Додає averageRating/reviewsCount і прибирає "сирий" масив reviews з
-// публічної відповіді - клієнту потрібне лише підсумкове число.
 function withRatingSummary(specialist) {
   const { reviews, ...rest } = specialist;
   const ratings = reviews || [];
@@ -37,16 +32,8 @@ function withRatingSummary(specialist) {
   return { ...rest, averageRating, reviewsCount };
 }
 
-// GET /api/specialists - публічний список підтверджених спеціалістів.
-// Фільтр по user.role - захист від "осиротілого" SpecialistProfile: якщо
-// комусь вручну змінили роль з SPECIALIST на іншу (наприклад, у Prisma
-// Studio), стара анкета не повинна лишатись видимою як публічний спеціаліст.
 exports.getApprovedSpecialists = async (req, res) => {
   try {
-    // Публічний ендпоінт - свідомо НЕ повертаємо fullLegalName,
-    // licenseNumber, documentsUrl, aiScreeningNotes тощо: це дані для
-    // верифікації адміном, а не для показу клієнтам. photoUrl тут -
-    // готовий публічний R2-URL, окремого перетворення не потребує.
     const specialists = await prisma.specialistProfile.findMany({
       where: { verificationStatus: "APPROVED", user: { role: "SPECIALIST" } },
       select: PUBLIC_SPECIALIST_SELECT,
@@ -58,9 +45,6 @@ exports.getApprovedSpecialists = async (req, res) => {
   }
 };
 
-// GET /api/specialists/pending - ADMIN: профілі, що очікують підтвердження.
-// documentsUrl тут - короткочасні підписані посилання на R2 (не самі
-// ключі), тому кожен запит генерує їх заново.
 exports.getPendingSpecialists = async (req, res) => {
   try {
     const specialists = await prisma.specialistProfile.findMany({
@@ -86,10 +70,6 @@ exports.getPendingSpecialists = async (req, res) => {
   }
 };
 
-// Ці поля - саме те, що адмін перевіряв, коли підтверджував заявку. Якщо
-// підтверджений спеціаліст їх міняє, старе підтвердження вже не відповідає
-// дійсності - повертаємо заявку на повторний розгляд, а не залишаємо
-// "Підтверджено" на публічній картці для когось, кого адмін ще не бачив.
 function verificationDataChanged(profile, fields) {
   const normalizedGraduationYear =
     fields.graduationYear !== undefined
@@ -110,11 +90,6 @@ function verificationDataChanged(profile, fields) {
   );
 }
 
-// PUT /api/specialists/me - спеціаліст редагує власний профіль.
-// documentsUrl НЕ приймається звідси - це внутрішні ключі R2, які пише
-// лише uploadDocuments нижче (сам він перевірений сервером); якби клієнт
-// міг переписати їх напряму, він міг би підставити чужий ключ і потім
-// побачити його через власний getMyProfile (presigned URL).
 exports.updateMyProfile = async (req, res) => {
   try {
     const {
@@ -181,7 +156,6 @@ exports.updateMyProfile = async (req, res) => {
   }
 };
 
-// PUT /api/specialists/:id/verify - ADMIN підтверджує або відхиляє профіль
 exports.verifySpecialist = async (req, res) => {
   try {
     const { id } = req.params;
@@ -209,8 +183,6 @@ exports.verifySpecialist = async (req, res) => {
 exports.getSpecialistById = async (req, res) => {
   try {
     const { id } = req.params;
-    // Так само публічний ендпоінт - role потрібна лише для перевірки
-    // нижче, її не включаємо в PUBLIC_SPECIALIST_SELECT.
     const specialist = await prisma.specialistProfile.findUnique({
       where: { id },
       select: {
@@ -231,8 +203,6 @@ exports.getSpecialistById = async (req, res) => {
   }
 };
 
-// GET /api/specialists/me - власний профіль спеціаліста. documentsUrl тут -
-// короткочасні підписані посилання на R2, не самі ключі.
 exports.getMyProfile = async (req, res) => {
   try {
     const profile = await prisma.specialistProfile.findUnique({
@@ -255,9 +225,6 @@ exports.getMyProfile = async (req, res) => {
 
 const SCREENING_MODEL = "gemini-3.7-flash";
 
-// AI НЕ приймає рішення про верифікацію - лише готує підказку для адміна.
-// Той самий безпековий принцип, що й у crisisDetected: людина завжди
-// вирішує сама, AI тільки допомагає їй швидше й уважніше прочитати заявку.
 const SCREENING_SYSTEM_INSTRUCTION = `Ти - асистент попереднього скринінгу документів для платформи психологічної підтримки "Опора". Твоє завдання - подивитись на завантажений документ (диплом, сертифікат чи ліцензію спеціаліста) і ДОПОМОГТИ адміністратору-людині, а не замінити його рішення.
 
 СУВОРІ ПРАВИЛА:
@@ -317,10 +284,6 @@ async function screenDocument(buffer, mimeType, fullLegalName) {
   return JSON.parse(interaction.output_text);
 }
 
-// POST /api/specialists/me/documents - завантаження документів + AI-скринінг.
-// Файли ніколи не торкаються диска сервера (multer.memoryStorage) - одразу
-// вивантажуються в R2 як приватні обʼєкти; у БД зберігаються лише їхні
-// ключі (documentsUrl), а не готові URL.
 exports.uploadDocuments = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -401,10 +364,6 @@ exports.uploadDocuments = async (req, res) => {
   }
 };
 
-// POST /api/specialists/me/photo - фото профілю, показується клієнтам публічно.
-// Це НЕ документ верифікації, тому статус підтвердження не чіпаємо. Фото -
-// свідомо публічний файл, тому в БД зберігається готовий постійний R2-URL
-// (не ключ), на відміну від приватних donations/specialist-docs.
 exports.uploadPhoto = async (req, res) => {
   try {
     if (!req.file) {

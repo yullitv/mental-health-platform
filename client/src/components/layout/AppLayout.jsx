@@ -3,8 +3,6 @@ import Header from "./Header";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 import { useNotifications } from "../../context/NotificationContext";
 
-// "Головна" (лендинг з описом платформи) доступна і залогіненим - вона
-// більше не редіректить одразу на "/dashboard" (див. HomePage.jsx).
 const baseNavItems = [
   { to: "/", label: "Головна" },
   { to: "/dashboard", label: "Кабінет" },
@@ -12,10 +10,6 @@ const baseNavItems = [
   { to: "/notifications", label: "Сповіщення" },
 ];
 
-// Гість (не залогінена людина): "Головна" + те, що реально доступне без
-// акаунту - перегляд спеціалістів і кризова підтримка. "Кабінет"/
-// "Сповіщення" без логіну однаково нікуди не ведуть (ProtectedRoute
-// поверне на "/").
 const guestNavItems = [
   { to: "/", label: "Головна" },
   { to: "/specialists", label: "Спеціалісти" },
@@ -28,26 +22,17 @@ const AppLayout = () => {
 
   let navItems = dbUser ? baseNavItems : guestNavItems;
   if (dbUser?.role === "ADMIN") {
-    // "Кабінет" (сесії клієнта/спеціаліста) - не про роль адміна, його
-    // робочий простір це "Адмін-панель". "Спеціалісти" лишаємо - корисно
-    // звірити, як публічний профіль виглядає після підтвердження
-    // (SpecialistDetailPage сама ховає бронювання для адміна).
     navItems = [
       ...baseNavItems.filter((item) => item.to !== "/dashboard"),
       { to: "/admin", label: "Адмін-панель" },
     ];
   } else if (dbUser?.role === "CLIENT") {
-    // Інструменти самодопомоги (щоденник, тести, дихання тощо) згруповані
-    // в одну сторінку "Інструменти" (ToolsPage.jsx) - окремий пункт меню
-    // поруч з іншими, а не 7 окремих пунктів чи підрозділ "Кабінету".
     navItems = [
       ...baseNavItems.slice(0, 2),
       { to: "/tools", label: "Інструменти" },
       ...baseNavItems.slice(2),
     ];
   } else if (dbUser?.role === "SPECIALIST") {
-    // "Спеціалісти" - це бронювання ІНШИХ спеціалістів, спеціалісту в його
-    // власній роботі не потрібне.
     navItems = [
       ...baseNavItems.filter((item) => item.to !== "/specialists"),
       { to: "/specialist-profile", label: "Профіль і верифікація" },

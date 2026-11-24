@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../api/config";
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
-// Той самий список, що й у профілі спеціаліста ("з чим працюєш") - щоб
-// теги на фільтрі й на картці спеціаліста читались однаково.
 const CONCERN_LABELS = {
   anxiety: "Тривожність",
   stress: "Стрес",
@@ -58,9 +56,6 @@ const SpecialistsPage = () => {
     fetchSpecialists();
   }, []);
 
-  // Підходи в роботі (specializations) - вільний текст, який спеціаліст
-  // вписує сам ("КПТ", "Гештальт"). З чим працює (concerns) - той самий
-  // контрольований список, що й у профілі спеціаліста / раніше в анкеті.
   const allApproaches = useMemo(() => {
     const set = new Set();
     specialists.forEach((s) =>

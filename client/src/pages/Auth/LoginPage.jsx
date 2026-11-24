@@ -10,9 +10,6 @@ const LoginPage = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const navigate = useNavigate();
 
-  // "sign_in" - звичайний вхід; "second_factor" - код з пошти при вході з
-  // нового пристрою (захист Clerk Device Trust); "forgot_email" - вводимо
-  // пошту для коду скидання; "forgot_reset" - вводимо код і новий пароль.
   const [step, setStep] = useState("sign_in");
 
   const [email, setEmail] = useState("");
@@ -28,9 +25,6 @@ const LoginPage = () => {
     navigate("/");
   };
 
-  // Clerk Device Trust: при вході паролем з нового пристрою Clerk вимагає
-  // другий крок - одноразовий код, надісланий на пошту. Без цього кроку
-  // правильний пароль закінчувався загальною помилкою "Не вдалось увійти".
   const startEmailCodeStep = async (result) => {
     const emailFactor = result.supportedSecondFactors?.find(
       (f) => f.strategy === "email_code",
