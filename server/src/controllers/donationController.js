@@ -641,3 +641,5 @@ exports.rejectDonation = async (req, res) => {
     res.status(500).json({ message: "Помилка сервера" });
   }
 };
+// Експорт для модульних тестів звірки з випискою (tests/donation.test.js).
+exports.checkBankConfirmation = checkBankConfirmation;
