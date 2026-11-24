@@ -5,18 +5,10 @@ import { useCurrentUser } from "../../context/CurrentUserContext";
 import { API_BASE_URL } from "../../api/config";
 import { getVideoRoomCredentials } from "../../utils/videoRoom";
 
-// ВАЖЛИВО: публічний meet.jit.si офіційно призначений лише для демонстрації -
-// будь-який дзвінок, вбудований отак напряму (iframe/External API), Jitsi
-// примусово розриває через 5 хвилин ("Embedding meet.jit.si is only meant
-// for demo purposes"). Для реальних сесій (45-60 хв) це свідомо прийняте
-// обмеження цієї версії - для production знадобиться або платний Jitsi as
-// a Service (JWT-автентифікація), або інший провайдер без цього ліміту
-// (наприклад Daily.co - не вимагає реєстрації від учасників, тільки один
-// API-ключ власника застосунку), або власний self-hosted Jitsi-сервер.
 const JITSI_SCRIPT_SRC = "https://meet.jit.si/external_api.js";
 
 const JOIN_WINDOW_BEFORE_MS = 15 * 60 * 1000; // можна зайти за 15 хв до початку
-const JOIN_WINDOW_AFTER_MS = 15 * 60 * 1000; // і ще 15 хв після запланованого завершення
+const JOIN_WINDOW_AFTER_MS = 15 * 60 * 1000;
 
 function loadJitsiScript() {
   return new Promise((resolve, reject) => {
@@ -123,10 +115,6 @@ const VideoSessionPage = () => {
         });
         apiRef.current = api;
 
-        // Захист кімнати паролем (детермінований з sessionId, однаковий у
-        // обох учасників, без бекенду). Best-effort: перший, хто заходить,
-        // стає модератором і встановлює пароль; другий отримує запит на
-        // пароль, і ми підставляємо його автоматично.
         api.addEventListener("videoConferenceJoined", () => {
           api.executeCommand("password", password);
         });

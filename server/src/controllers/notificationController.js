@@ -14,7 +14,6 @@ exports.getMyNotifications = async (req, res) => {
   }
 };
 
-// PUT /api/notifications/:id/read - позначити одне сповіщення прочитаним
 exports.markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
@@ -43,7 +42,6 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-// PUT /api/notifications/read-all - позначити всі сповіщення прочитаними
 exports.markAllAsRead = async (req, res) => {
   try {
     await prisma.notification.updateMany({

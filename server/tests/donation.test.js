@@ -1,4 +1,3 @@
-// Звірка донату з випискою банку: банк (stub), база (fake), решта залежностей (dummy).
 const test = require("node:test"); const assert = require("node:assert/strict");
 const { mock } = test;
 const { inject, load } = require("./helpers.js");

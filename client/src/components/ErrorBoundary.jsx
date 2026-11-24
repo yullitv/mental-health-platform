@@ -1,7 +1,5 @@
 import { Component } from "react";
 
-// Страховка на випадок, якщо якийсь компонент впаде під час рендеру -
-// без цього React показує повністю білий екран без жодного пояснення.
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);

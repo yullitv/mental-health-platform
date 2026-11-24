@@ -32,9 +32,6 @@ const AppRoutes = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
 
-        {/* Публічно доступно і без реєстрації: перегляд спеціалістів (без
-            бронювання) і кризова підтримка - гарячі лінії не можуть
-            залежати від того, чи встигла людина зареєструватись. */}
         <Route path="/specialists" element={<SpecialistsPage />} />
         <Route path="/specialists/:id" element={<SpecialistDetailPage />} />
         <Route path="/crisis" element={<CrisisPage />} />

@@ -1,6 +1,3 @@
-// Модульні тести клієнтських утиліт: E2EE-шифрування, підрахунок скринінг-тестів,
-// серія активності, код оплати (клієнт = сервер), облікові дані відеокімнати.
-// Запуск: npm test (у папці client).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";

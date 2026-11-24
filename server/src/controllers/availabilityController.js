@@ -34,7 +34,6 @@ exports.createSlot = async (req, res) => {
   }
 };
 
-// GET /api/availability/mine - усі слоти поточного спеціаліста (заброньовані й ні)
 exports.getMySlots = async (req, res) => {
   try {
     const profile = await prisma.specialistProfile.findUnique({
@@ -58,7 +57,6 @@ exports.getMySlots = async (req, res) => {
   }
 };
 
-// GET /api/availability/:specialistId - публічний список вільних майбутніх слотів спеціаліста
 exports.getAvailableSlots = async (req, res) => {
   try {
     const { specialistId } = req.params;
@@ -79,7 +77,6 @@ exports.getAvailableSlots = async (req, res) => {
   }
 };
 
-// DELETE /api/availability/:id - спеціаліст видаляє свій незаброньований слот
 exports.deleteSlot = async (req, res) => {
   try {
     const { id } = req.params;

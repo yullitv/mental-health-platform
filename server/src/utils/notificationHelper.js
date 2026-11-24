@@ -2,8 +2,6 @@ const prisma = require("../prisma");
 const { getIo } = require("../socket");
 const { sendMail } = require("./mailer");
 
-// Створення сповіщення. Обгорнуто в try/catch, щоб збій сповіщення
-// ніколи не ламав основну дію (бронювання, донат, повідомлення).
 async function createNotification({ userId, type, title, message, link }) {
   try {
     const notification = await prisma.notification.create({
@@ -16,8 +14,6 @@ async function createNotification({ userId, type, title, message, link }) {
       console.error("❌ Socket.io недоступний:", ioError.message);
     }
 
-    // Email-дублювання сповіщення. Не блокує основний потік (fire-and-forget)
-    // і не ламає нічого при збої - просто лог помилки.
     prisma.user
       .findUnique({ where: { id: userId }, select: { email: true } })
       .then((user) => {

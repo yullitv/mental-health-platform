@@ -1,4 +1,3 @@
-// Клієнт Monobank Open API: мережевий виклик замінено mock-функцією fetch.
 const test = require("node:test"); const assert = require("node:assert/strict");
 const { mock } = test;
 process.env.MONOBANK_JAR_TOKEN = "dummy-token";

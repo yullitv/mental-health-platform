@@ -24,10 +24,6 @@ const r2Client = new S3Client({
   },
 });
 
-// Завантажує буфер (з multer.memoryStorage) у R2 під унікальним ключем у
-// вказаній "папці" (префіксі). Повертає сам ключ, а не URL - виклик сам
-// вирішує, публічний файл чи приватний, і будує потрібний URL окремо
-// (getPublicUrl / getPresignedUrl).
 async function uploadBuffer(buffer, mimeType, folder, originalName = "") {
   const ext = path.extname(originalName);
   const key = `${folder}/${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
@@ -42,19 +38,11 @@ async function uploadBuffer(buffer, mimeType, folder, originalName = "") {
   return key;
 }
 
-// Прямий постійний публічний URL - лише для файлів, які й задумані як
-// публічні (фото профілю спеціаліста).
 function getPublicUrl(key) {
   if (!key) return null;
   return `${R2_PUBLIC_URL}/${key}`;
 }
 
-// Короткочасне підписане посилання - для приватних файлів (донат-скріни,
-// документи верифікації спеціаліста). Посилання діє обмежений час, тому
-// його не можна зберегти і використовувати повторно пізніше - саме це
-// закриває "security by obscurity" діру, яка була з публічною /uploads.
-// Година - свідомий компроміс: адмін/спеціаліст переглядає чергу заявок
-// не миттєво, а 5 хвилин виявились закороткими для реального перегляду.
 async function getPresignedUrl(key, expiresInSeconds = 3600) {
   if (!key) return null;
   const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key });

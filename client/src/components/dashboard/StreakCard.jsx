@@ -3,10 +3,6 @@ import { useAuth } from "@clerk/clerk-react";
 import { API_BASE_URL } from "../../api/config";
 import { computeStreakStats, streakMessage } from "../../utils/streak";
 
-// Гейміфікація без тиску: жодних "розбитих" стріків червоним, жодного
-// порівняння з іншими. Пропущений день просто нейтрального кольору в
-// стрічці нижче - не хрестик, не попередження. Найдовша серія лишається
-// видимою як досягнення, навіть коли поточна перервалась.
 const StreakCard = () => {
   const { getToken } = useAuth();
   const [stats, setStats] = useState(null);
@@ -30,8 +26,7 @@ const StreakCard = () => {
         const dates = [...diary, ...screening].map((e) => e.date);
         if (!cancelled) setStats(computeStreakStats(dates));
       } catch {
-        // Віджет - доповнення до кабінету, не критичний шлях; тихо
-        // ігноруємо збій замість показу помилки.
+        // віджет не критичний, збій ігноруємо
       } finally {
         if (!cancelled) setIsLoading(false);
       }

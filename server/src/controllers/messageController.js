@@ -150,7 +150,6 @@ exports.editMessage = async (req, res) => {
   }
 };
 
-// DELETE /api/messages/:id - видалити власне повідомлення (м'яке видалення)
 exports.deleteMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +189,6 @@ exports.deleteMessage = async (req, res) => {
   }
 };
 
-// PUT /api/messages/:sessionId/read - позначити чужі повідомлення як прочитані
 exports.markAsRead = async (req, res) => {
   try {
     const { sessionId } = req.params;

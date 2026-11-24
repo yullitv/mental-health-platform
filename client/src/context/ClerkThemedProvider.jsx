@@ -2,10 +2,6 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { ukUA } from "@clerk/localizations";
 import { useTheme } from "./ThemeContext";
 
-// Один спільний вигляд для всіх вбудованих екранів Clerk (UserButton →
-// "Manage account", verification-код при реєстрації, форма скидання
-// пароля тощо) - та сама палітра й шрифт, що й решта "Опори", плюс
-// українська локалізація замість дефолтної англійської.
 const buildAppearance = (theme) => {
   const isDark = theme === "dark";
   return {

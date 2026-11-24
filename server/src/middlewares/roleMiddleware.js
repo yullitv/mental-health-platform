@@ -1,13 +1,6 @@
 const prisma = require("../prisma");
 const { getAuth } = require("@clerk/express");
 
-/**
- * Використання: router.get('/шлях', requireRole('ADMIN'), controller)
- * requireAuth() з @clerk/express навмисно НЕ використовуємо - при 401 він робить
- * redirect замість JSON і ламає fetch на фронтенді. requireRole сам перевіряє
- * userId через getAuth(req) (працює завдяки глобальному clerkMiddleware() в
- * server.js) і повертає чистий JSON 401/403.
- */
 const requireRole = (...allowedRoles) => {
   return async (req, res, next) => {
     try {

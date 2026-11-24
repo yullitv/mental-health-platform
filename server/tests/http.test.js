@@ -1,6 +1,3 @@
-// Тести HTTP-проміжних обробників на реальному сервері Express:
-// обмежувачі частоти запитів і розбір дозволених CORS-origin.
-// Запуск: npm test (у папці server).
 const test = require("node:test"); const assert = require("node:assert/strict");
 const express = require("express");
 const { apiLimiter, aiLimiter } = require("../src/middlewares/rateLimiters.js");

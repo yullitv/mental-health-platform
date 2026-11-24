@@ -14,13 +14,6 @@ import {
 
 const SCALE = [1, 2, 3, 4, 5];
 
-// Web Speech API замість хмарної транскрипції (Gemini/Whisper): аудіо
-// ніколи не потрапляє на наш сервер чи AI-провайдера - розпізнавання
-// відбувається в самому браузері, а в щоденник (і далі в шифрування)
-// потрапляє вже готовий текст, так само як при ручному наборі. Це
-// узгоджено з E2EE-моделлю щоденника. Мінус: стабільно працює лише в
-// Chrome/Edge (Chromium) - у Firefox/Safari підтримки нема, тож кнопка
-// диктування там просто не показується.
 const SpeechRecognitionAPI =
   typeof window !== "undefined"
     ? window.SpeechRecognition || window.webkitSpeechRecognition
@@ -94,9 +87,6 @@ const METRIC_PAIRS = [
   ["mood", "stress"],
 ];
 
-// Генерує текстові інсайти на основі кореляцій, порівнянь сну і трендів.
-// Усе рахується виключно на РОЗШИФРОВАНИХ записах у браузері - сервер
-// цих даних ніколи не бачить.
 function generateInsights(entries) {
   const insights = [];
 
@@ -164,7 +154,6 @@ function generateInsights(entries) {
     });
   }
 
-  // 4. Позначки "що вплинуло" - чи повторюється патерн при певному факторі
   const withFactors = entries.filter(
     (e) => Array.isArray(e.factors) && e.factors.length > 0,
   );
@@ -219,8 +208,6 @@ function percentChange(current, previous) {
   return ((current - previous) / previous) * 100;
 }
 
-// Підсумок для картки "Моє самопочуття": сьогоднішні значення + зміна
-// порівняно з попереднім 7-денним вікном. Усе на РОЗШИФРОВАНИХ записах.
 function buildTodaySummary(entries) {
   const today =
     entries.find((e) => entryKey(e.date) === dateKeyOffset(0)) ?? null;
@@ -247,8 +234,6 @@ function buildTodaySummary(entries) {
   return { today, trends, topInsight };
 }
 
-// Підсумок картки "Мій тиждень": найкращий/найважчий день і середні
-// значення за останні до 7 записів.
 function buildWeekSummary(entries) {
   const recent = entries.slice(-7);
   const withMood = recent.filter((e) => e.mood != null);
@@ -411,9 +396,6 @@ const DiaryChart = ({ entries, metrics, onHover, onSelect }) => {
   );
 };
 
-// Екран, що з'являється, коли в браузері немає ключа, а в БД вже є
-// зашифровані записи (наприклад, новий пристрій) - потрібно ввести
-// існуючий ключ або свідомо почати щоденник заново.
 const KeyGate = ({ onImport, onReset, error, isChecking }) => {
   const [value, setValue] = useState("");
 
@@ -524,9 +506,6 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-// Реєструє шрифт Manrope (він же бренд-шрифт застосунку) у jsPDF, щоб
-// кирилиця в PDF відображалась коректно - дефолтні шрифти jsPDF (Helvetica
-// тощо) кириличних гліфів не мають взагалі.
 async function registerCyrillicFont(doc) {
   const response = await fetch("/fonts/Manrope-Variable.ttf");
   if (!response.ok) throw new Error("Не вдалось завантажити шрифт для PDF");
@@ -537,8 +516,6 @@ async function registerCyrillicFont(doc) {
   doc.setFont("Manrope", "normal");
 }
 
-// Формує сам PDF-документ зі списку РОЗШИФРОВАНИХ записів (усе рахується
-// вже в браузері - jsPDF ніколи не бачить нічого, крім готового тексту).
 function renderDiaryReportPdf(doc, entries, rangeLabel) {
   const margin = 40;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -607,8 +584,6 @@ function renderDiaryReportPdf(doc, entries, rangeLabel) {
   }
   y += 10;
 
-  // Помічені закономірності - той самий генератор, що на сторінці, лише
-  // порахований саме для записів обраного періоду.
   const periodInsights = generateInsights(entries);
   if (periodInsights.length > 0) {
     ensureSpace(24);
@@ -736,8 +711,6 @@ const DiaryPage = () => {
     }
   }, [getToken]);
 
-  // Початкове завантаження: спершу тягнемо зашифровані записи, тоді
-  // вирішуємо, чи є в браузері ключ, чи потрібно його запитати.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -759,7 +732,6 @@ const DiaryPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Розшифровка записів кожного разу, коли з'являється ключ або приходять нові дані.
   useEffect(() => {
     if (keyStatus !== "ready" || !encryptionKey) return;
     let cancelled = false;
@@ -898,8 +870,6 @@ const DiaryPage = () => {
     }
   };
 
-  // Зупиняємо диктування, якщо компонент розмонтовується (перехід на іншу
-  // сторінку) - інакше розпізнавання й доступ до мікрофона лишились б жити.
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop();

@@ -14,9 +14,6 @@ const STATUS_LABELS = {
   CANCELLED: "Скасовано",
 };
 
-// Той самий вікно доступу, що й на сторінці відео-сесії
-// (VideoSessionPage.jsx) - щоб кнопка на дашборді з'являлась саме тоді,
-// коли перехід на відео справді спрацює.
 const JOIN_WINDOW_BEFORE_MS = 15 * 60 * 1000;
 const JOIN_WINDOW_AFTER_MS = 15 * 60 * 1000;
 
@@ -51,17 +48,12 @@ const DashboardPage = () => {
   const [busyId, setBusyId] = useState(null);
   const [, setClockTick] = useState(0);
 
-  // Раз на хвилину форсуємо перерендер, щоб кнопка "Приєднатися до відео"
-  // з'являлась/зникала близько до реального часу, а не тільки після
-  // наступного ручного оновлення сторінки.
   useEffect(() => {
     const interval = setInterval(() => setClockTick((t) => t + 1), 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   const loadData = useCallback(async () => {
-    // Адмін не має власних сесій/донатів як клієнт чи спеціаліст - і не
-    // має доступу до /sessions/mine на бекенді, тож навіть не питаємо.
     if (!dbUser || dbUser.role === "ADMIN") return;
     try {
       const token = await getToken();

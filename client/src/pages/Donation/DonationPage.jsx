@@ -15,9 +15,6 @@ const DonationPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Заповнюється після подачі заяви на донат, якщо банк одразу не
-  // підтвердив переказ автоматично - тоді показуємо запасний крок:
-  // довантажити скрін для ручної перевірки.
   const [pendingDonationId, setPendingDonationId] = useState(null);
   const [proofFile, setProofFile] = useState(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);

@@ -43,9 +43,6 @@ const BreathingPage = () => {
     setStep("setup");
   };
 
-  // Стан для першої фази виставляється тут, у відповідь на клік - це
-  // звичайний обробник події, а не ефект, тож синхронний setState тут
-  // не спричиняє каскадних рендерів.
   const startSession = () => {
     const firstPhase = exercise.pattern[0];
     setPhaseIndex(0);
@@ -62,11 +59,6 @@ const BreathingPage = () => {
     setCircleScale(1);
   };
 
-  // Один ефект на всю логіку таймера поточної фази: секундний тік для
-  // відображення лічильника і таймаут переходу до наступної фази. Стан для
-  // НАСТУПНОЇ фази (і лічильник циклів) виставляється всередині callback'а
-  // таймауту, а не синхронно в тілі ефекту - так React не бачить тут
-  // каскадного оновлення стану.
   useEffect(() => {
     if (step !== "running" || !exercise) return undefined;
     const phase = exercise.pattern[phaseIndex];

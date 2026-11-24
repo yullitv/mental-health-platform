@@ -187,7 +187,6 @@ const RegisterPage = () => {
                 <p className="text-sm text-danger bg-danger/10 rounded-xl p-3">{error}</p>
               )}
 
-              {/* Clerk-віджет для захисту від ботів (CAPTCHA), якщо ввімкнений у проєкті */}
               <div id="clerk-captcha" />
 
               <button

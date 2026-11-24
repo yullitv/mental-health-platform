@@ -3,7 +3,6 @@ const router = express.Router();
 const availabilityController = require("../controllers/availabilityController");
 const requireRole = require("../middlewares/roleMiddleware");
 
-// Лише для спеціаліста (керування власними слотами) - ці маршрути ПЕРШІ
 router.get(
   "/mine",
   requireRole("SPECIALIST"),
@@ -16,7 +15,6 @@ router.delete(
   availabilityController.deleteSlot,
 );
 
-// Публічний - вільні слоти конкретного спеціаліста (для сторінки бронювання)
 router.get("/:specialistId", availabilityController.getAvailableSlots);
 
 module.exports = router;

@@ -32,9 +32,6 @@ const AdminPage = () => {
     }
   }, [getToken]);
 
-  // Адмін бачить усі донати на розгляді (не лише свої сесії, як спеціаліст) -
-  // бекенд (GET /donations/pending) уже це підтримує, тут просто відкриваємо
-  // це в інтерфейсі.
   const loadPendingDonations = useCallback(async () => {
     try {
       const token = await getToken();

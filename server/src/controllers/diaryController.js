@@ -9,9 +9,6 @@ function normalizeDate(input) {
 
 const MAX_CIPHERTEXT_LENGTH = 20000;
 
-// POST /api/diary - записати (або оновити) зашифрований запис за день.
-// Сервер НЕ бачить mood/physicalState/sleepHours/note у відкритому вигляді -
-// вони зашифровані на клієнті (AES-GCM), тут лише opaque-блоб cipherText.
 exports.upsertEntry = async (req, res) => {
   try {
     const { date, cipherText } = req.body;
@@ -44,8 +41,6 @@ exports.upsertEntry = async (req, res) => {
   }
 };
 
-// GET /api/diary/mine - усі зашифровані записи поточного користувача.
-// Розшифровка відбувається виключно на клієнті ключем, якого сервер не має.
 exports.getMyEntries = async (req, res) => {
   try {
     const entries = await prisma.diaryEntry.findMany({
@@ -82,12 +77,6 @@ function numOrNull(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-// POST /api/diary/weekly-reflection
-//
-// ВАЖЛИВО: це єдине місце у щоденнику, де сервер тимчасово бачить
-// розшифрований текст. Це відбувається лише за явною згодою користувача
-// (кнопка "Так, згенерувати" у клієнті) для одного запиту за раз - дані
-// не зберігаються в БД і використовуються тільки для цього виклику AI.
 exports.generateWeeklyReflection = async (req, res) => {
   try {
     const { entries } = req.body;
